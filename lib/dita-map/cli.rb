@@ -89,6 +89,28 @@ module AsciidoctorDitaMap
       return args
     end
 
+    def parse_topic input
+      doc = Asciidoctor.load input, safe: :secure, attributes: @attr
+      att = doc.attributes
+
+      document_title = doc.title ? doc.title.gsub(/"|<[^>]*>|[<>]/, '') : nil
+      document_type  = att['_mod-docs-content-type'] ? att['_mod-docs-content-type'].downcase : nil
+      document_type  = att['_content-type'] ? att['_mod-docs-content-type'].downcase : nil unless document_type
+      document_type  = att['_module-type'] ? att['_mod-docs-content-type'].downcase : nil unless document_type
+
+      if document_type
+        document_type.sub! /^assembly$/, 'concept'
+        document_type.sub! /^procedure$/, 'task'
+      end
+
+      unless ['concept', 'reference', 'task', 'map'].include? document_type
+        document_type = nil
+      end
+
+      return document_title, document_type
+    end
+
+
     def parse_map input, base_dir
       Asciidoctor::Extensions.register do
         include_processor CatalogIncludeDirectives
@@ -105,7 +127,7 @@ module AsciidoctorDitaMap
     def convert_map input, base_dir, prepended = ''
       result = ''
 
-      include_files, title = parse_map prepended + input, base_dir
+      include_files, map_title = parse_map prepended + input, base_dir
 
       xml = REXML::Document.new
       xml << REXML::XMLDecl.new('1.0', 'utf-8')
@@ -113,9 +135,9 @@ module AsciidoctorDitaMap
 
       xml_root  = xml.add_element('map')
 
-      if title
+      if map_title
         xml_title = xml_root.add_element('title')
-        xml_title.text = title
+        xml_title.text = map_title
       end
 
       stack = [{ :offset => 0, :element => xml_root }]
@@ -134,17 +156,21 @@ module AsciidoctorDitaMap
           offset = expected_offset
         end
 
-
         while stack.last[:offset] >= offset
           stack.pop
         end
 
         xml_parent   = stack.last[:element]
 
-        if target.start_with? 'map-'
+        include_title, include_type = parse_topic prepended + File.read(base_dir + file[:target])
+
+        if include_type == 'map'
           xml_element = xml_parent.add_element('mapref', { 'href' => target, 'format' => 'ditamap', 'type' => 'map' })
         else
-          xml_element = xml_parent.add_element('topicref', { 'href' => target })
+          attributes  = { 'href' => target }
+          attributes['navtitle'] = include_title if include_title
+          attributes['type'] = include_type if include_type
+          xml_element = xml_parent.add_element('topicref', attributes)
         end
 
         stack.push ({ :offset => offset, :element => xml_element })
