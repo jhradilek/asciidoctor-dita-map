@@ -11,8 +11,9 @@ Gem::Specification.new do |s|
   s.bindir      = 'bin'
   s.executables = ['dita-map']
   s.files       = [
-    'lib/dita-map/version.rb',
+    'lib/dita-map/catalog.rb',
     'lib/dita-map/cli.rb',
+    'lib/dita-map/version.rb',
     'LICENSE',
     'AUTHORS',
     'README.md'
