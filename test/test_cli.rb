@@ -10,7 +10,6 @@ class CliTest < Minitest::Test
     prep = cli.instance_variable_get :@prep
 
     assert_equal false, opts[:output]
-    assert_equal true, opts[:standalone]
     assert_equal [], attr
     assert_equal [], prep
   end
@@ -96,20 +95,6 @@ class CliTest < Minitest::Test
 
     assert_includes attr, 'version=3'
     assert_includes attr, 'release=1'
-  end
-
-  def test_no_header_footer_short
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-s']
-    opts = cli.instance_variable_get :@opts
-
-    assert_equal false, opts[:standalone]
-  end
-
-  def test_no_header_footer_long
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-header-footer']
-    opts = cli.instance_variable_get :@opts
-
-    assert_equal false, opts[:standalone]
   end
 
   def test_prepend_file_short

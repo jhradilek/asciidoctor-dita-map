@@ -34,7 +34,6 @@ module AsciidoctorDitaMap
       @attr = []
       @opts = {
         :output => false,
-        :standalone => true
       }
       @prep = []
       @name = name
@@ -52,10 +51,6 @@ module AsciidoctorDitaMap
 
         opt.on('-a', '--attribute ATTRIBUTE', 'set a document attribute in the form of name, name!, or name=value pair; can be supplied multiple times') do |value|
           @attr.append value
-        end
-
-        opt.on('-s', '--no-header-footer', 'disable enclosing the content in <topic> and generating <title>') do
-          @opts[:standalone] = false
         end
 
         opt.separator ''
