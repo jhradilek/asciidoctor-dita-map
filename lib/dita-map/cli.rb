@@ -144,9 +144,15 @@ module AsciidoctorDitaMap
           stack.pop
         end
 
-        xml_parent = stack.last[:element]
-        xml_topicref = xml_parent.add_element('topicref', { 'href' => target })
-        stack.push ({ :offset => offset, :element => xml_topicref })
+        xml_parent   = stack.last[:element]
+
+        if target.start_with? 'map-'
+          xml_element = xml_parent.add_element('mapref', { 'href' => target, 'format' => 'ditamap', 'type' => 'map' })
+        else
+          xml_element = xml_parent.add_element('topicref', { 'href' => target })
+        end
+
+        stack.push ({ :offset => offset, :element => xml_element })
       end
 
       formatter = REXML::Formatters::Pretty.new(2, true)
