@@ -94,15 +94,23 @@ module AsciidoctorDitaMap
       return args
     end
 
-    def convert_map input, base_dir, prepended = ''
-      result = ''
-
+    def parse_map input, base_dir
       Asciidoctor::Extensions.register do
         include_processor CatalogIncludeDirectives
       end
 
-      doc = Asciidoctor.load prepended + input, safe: :safe, catalog_assets: true, attributes: @attr
-      include_files = doc.catalog[:include_files] or []
+      doc = Asciidoctor.load input, safe: :safe, catalog_assets: true, attributes: @attr, base_dir: base_dir
+
+      include_files  = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
+      document_title = doc.title ? doc.title.gsub(/"|<[^>]*>|[<>]/, '') : nil
+
+      return include_files, document_title
+    end
+
+    def convert_map input, base_dir, prepended = ''
+      result = ''
+
+      include_files, title = parse_map prepended + input, base_dir
 
       xml = REXML::Document.new
       xml << REXML::XMLDecl.new('1.0', 'utf-8')
@@ -110,9 +118,9 @@ module AsciidoctorDitaMap
 
       xml_root  = xml.add_element('map')
 
-      if doc.doctitle
+      if title
         xml_title = xml_root.add_element('title')
-        xml_title.text = doc.doctitle.gsub(/"|<[^>]*>|[<>]/, '')
+        xml_title.text = title
       end
 
       stack = [{ :offset => 0, :element => xml_root }]
