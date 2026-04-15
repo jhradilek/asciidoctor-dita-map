@@ -143,16 +143,16 @@ module AsciidoctorDitaMap
       stack = [{ :offset => 0, :element => xml_root }]
 
       include_files.each do |file|
-        target = file[:target].sub /\.adoc$/, '.dita'
+        target = file[:target]
         offset = file[:offset]
         last_offset = stack.last[:offset]
 
         if offset == 0
-          warn "#{@name}: warning: Invalid leveloffset - expected 1, got 0: #{file[:target]}"
+          warn "#{@name}: warning: Invalid leveloffset - expected 1, got 0: #{target}"
           offset = 1
         elsif offset > last_offset and offset - last_offset > 1
           expected_offset = last_offset + 1
-          warn "#{@name}: warning: Invalid leveloffset - expected #{expected_offset}, got #{offset}: #{file[:target]}"
+          warn "#{@name}: warning: Invalid leveloffset - expected #{expected_offset}, got #{offset}: #{target}"
           offset = expected_offset
         end
 
@@ -162,12 +162,14 @@ module AsciidoctorDitaMap
 
         xml_parent   = stack.last[:element]
 
-        include_title, include_type = parse_topic prepended + File.read(base_dir + file[:target])
+        include_title, include_type = parse_topic prepended + File.read(base_dir + target)
 
         if include_type == 'map'
-          xml_element = xml_parent.add_element('mapref', { 'href' => target, 'format' => 'ditamap', 'type' => 'map' })
+          file_name = target.sub /\.adoc$/, '.ditamap'
+          xml_element = xml_parent.add_element('mapref', { 'href' => file_name, 'format' => 'ditamap', 'type' => 'map' })
         else
-          attributes  = { 'href' => target }
+          file_name = target.sub /\.adoc$/, '.dita'
+          attributes  = { 'href' => file_name }
           attributes['navtitle'] = include_title if include_title
           attributes['type'] = include_type if include_type
           xml_element = xml_parent.add_element('topicref', attributes)
