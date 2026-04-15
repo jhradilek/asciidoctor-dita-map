@@ -23,6 +23,9 @@
 
 require 'optparse'
 require 'pathname'
+require 'asciidoctor'
+require 'rexml/document'
+require_relative 'catalog'
 require_relative 'version'
 
 module AsciidoctorDitaMap
@@ -91,8 +94,87 @@ module AsciidoctorDitaMap
       return args
     end
 
+    def convert_map input, base_dir, prepended = ''
+      result = ''
+
+      Asciidoctor::Extensions.register do
+        include_processor CatalogIncludeDirectives
+      end
+
+      doc = Asciidoctor.load prepended + input, safe: :safe, catalog_assets: true, attributes: @attr
+      include_files = doc.catalog[:include_files] or []
+
+      xml = REXML::Document.new
+      xml << REXML::XMLDecl.new('1.0', 'utf-8')
+      xml << REXML::DocType.new('map', 'PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd"')
+
+      xml_root  = xml.add_element('map')
+
+      if doc.doctitle
+        xml_title = xml_root.add_element('title')
+        xml_title.text = doc.doctitle.gsub(/"|<[^>]*>|[<>]/, '')
+      end
+
+      stack = [{ :offset => 0, :element => xml_root }]
+
+      include_files.each do |file|
+        target = file[:target].sub /\.adoc$/, '.dita'
+        offset = file[:offset]
+        last_offset = stack.last[:offset]
+
+        if offset == 0
+          warn "#{@name}: warning: Invalid leveloffset - expected 1, got 0: #{file[:target]}"
+          offset = 1
+        elsif offset > last_offset and offset - last_offset > 1
+          expected_offset = last_offset + 1
+          warn "#{@name}: warning: Invalid leveloffset - expected #{expected_offset}, got #{offset}: #{file[:target]}"
+          offset = expected_offset
+        end
+
+
+        while stack.last[:offset] >= offset
+          stack.pop
+        end
+
+        xml_parent = stack.last[:element]
+        xml_topicref = xml_parent.add_element('topicref', { 'href' => target })
+        stack.push ({ :offset => offset, :element => xml_topicref })
+      end
+
+      formatter = REXML::Formatters::Pretty.new(2, true)
+      formatter.compact = true
+      formatter.write(xml, result)
+
+      return result
+    end
+
     def run
-      puts "To be implemented..."
+      prepended = ''
+
+      @prep.each do |file|
+        prepended << File.read(file)
+        prepended << "\n"
+      end
+
+      @args.each do |file|
+        if file == $stdin
+          base_dir = Pathname.new(Dir.pwd).expand_path
+          input    = $stdin.read
+          output   = @opts[:output] ? @opts[:output] : $stdout
+        else
+          base_dir = Pathname.new(file).dirname.expand_path
+          input    = File.read(file)
+          output   = @opts[:output] ? @opts[:output] : Pathname.new(file).sub_ext('.dita').to_s
+        end
+
+        result = convert_map input, base_dir, prepended
+
+        if output == $stdout
+          $stdout.write result
+        else
+          File.write output, result
+        end
+      end
     end
   end
 end
