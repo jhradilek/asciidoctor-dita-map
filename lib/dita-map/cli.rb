@@ -172,7 +172,7 @@ module AsciidoctorDitaMap
         else
           base_dir = Pathname.new(file).dirname.expand_path
           input    = File.read(file)
-          output   = @opts[:output] ? @opts[:output] : Pathname.new(file).sub_ext('.dita').to_s
+          output   = @opts[:output] ? @opts[:output] : Pathname.new(file).sub_ext('.ditamap').to_s
         end
 
         result = convert_map input, base_dir, prepended
