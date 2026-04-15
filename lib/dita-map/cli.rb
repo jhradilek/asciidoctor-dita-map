@@ -33,7 +33,9 @@ module AsciidoctorDitaMap
     def initialize name, argv
       @attr = []
       @opts = {
+        :navtitle => true,
         :output => false,
+        :type => true
       }
       @prep = []
       @name = name
@@ -60,6 +62,16 @@ module AsciidoctorDitaMap
           raise OptionParser::InvalidArgument, "file not readable: #{file}" unless File.readable? file
 
           @prep.append file
+        end
+
+        opt.separator ''
+
+        opt.on('-N', '--no-navtitle', 'do not generate the navtitle attribute') do
+          @opts[:navtitle] = false
+        end
+
+        opt.on('-T', '--no-type', 'do not generate the type attribute') do
+          @opts[:type] = false
         end
 
         opt.separator ''
@@ -95,12 +107,12 @@ module AsciidoctorDitaMap
 
       document_title = doc.title ? doc.title.gsub(/"|<[^>]*>|[<>]/, '') : nil
       document_type  = att['_mod-docs-content-type'] ? att['_mod-docs-content-type'].downcase : nil
-      document_type  = att['_content-type'] ? att['_mod-docs-content-type'].downcase : nil unless document_type
-      document_type  = att['_module-type'] ? att['_mod-docs-content-type'].downcase : nil unless document_type
+      document_type  = att['_content-type'] ? att['_content-type'].downcase : nil unless document_type
+      document_type  = att['_module-type'] ? att['_module-type'].downcase : nil unless document_type
 
       if document_type
-        document_type.sub! /^assembly$/, 'concept'
-        document_type.sub! /^procedure$/, 'task'
+        document_type.sub!(/^assembly$/, 'concept')
+        document_type.sub!(/^procedure$/, 'task')
       end
 
       unless ['concept', 'reference', 'task', 'map'].include? document_type
@@ -143,8 +155,8 @@ module AsciidoctorDitaMap
       stack = [{ :offset => 0, :element => xml_root }]
 
       include_files.each do |file|
-        target = file[:target]
-        offset = file[:offset]
+        target      = file[:target]
+        offset      = file[:offset]
         last_offset = stack.last[:offset]
 
         if offset == 0
@@ -162,16 +174,22 @@ module AsciidoctorDitaMap
 
         xml_parent   = stack.last[:element]
 
-        include_title, include_type = parse_topic prepended + File.read(base_dir + target)
+        if @opts[:navtitle] or @opts[:type]
+          include_title, include_type = parse_topic prepended + File.read(base_dir + target)
+        end
 
         if include_type == 'map'
-          file_name = target.sub /\.adoc$/, '.ditamap'
-          xml_element = xml_parent.add_element('mapref', { 'href' => file_name, 'format' => 'ditamap', 'type' => 'map' })
+          file_name          = target.sub(/\.adoc$/, '.ditamap')
+          attributes         = { 'href' => file_name, 'format' => 'ditamap' }
+          attributes['type'] = include_type if @opts[:type]
+
+          xml_element = xml_parent.add_element('mapref', attributes)
         else
-          file_name = target.sub /\.adoc$/, '.dita'
-          attributes  = { 'href' => file_name }
-          attributes['navtitle'] = include_title if include_title
-          attributes['type'] = include_type if include_type
+          file_name = target.sub(/\.adoc$/, '.dita')
+          attributes             = { 'href' => file_name }
+          attributes['navtitle'] = include_title if include_title and @opts[:navtitle]
+          attributes['type']     = include_type if include_type and @opts[:type]
+
           xml_element = xml_parent.add_element('topicref', attributes)
         end
 

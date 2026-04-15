@@ -10,6 +10,8 @@ class CliTest < Minitest::Test
     prep = cli.instance_variable_get :@prep
 
     assert_equal false, opts[:output]
+    assert_equal true, opts[:navtitle]
+    assert_equal true, opts[:type]
     assert_equal [], attr
     assert_equal [], prep
   end
@@ -181,6 +183,74 @@ class CliTest < Minitest::Test
           assert_match(/file not readable: #{file}/, error.message)
         end
       end
+    end
+  end
+
+  def test_no_navtitle_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-N']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:navtitle]
+  end
+
+  def test_no_navtitle_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-navtitle']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:navtitle]
+  end
+
+  def test_no_type_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-T']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:type]
+  end
+
+  def test_no_type_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-type']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:type]
+  end
+
+  def test_help_short
+    assert_output(/^Usage: script-name /) do
+      error = assert_raises SystemExit do
+        AsciidoctorDitaMap::Cli.new 'script-name', ['-h']
+      end
+
+      assert_equal 0, error.status
+    end
+  end
+
+  def test_help_long
+    assert_output(/^Usage: script-name /) do
+      error = assert_raises SystemExit do
+        AsciidoctorDitaMap::Cli.new 'script-name', ['--help']
+      end
+
+      assert_equal 0, error.status
+    end
+  end
+
+  def test_version_short
+    assert_output(/^script-name \d+\.\d+\.\d+$/) do
+      error = assert_raises SystemExit do
+        AsciidoctorDitaMap::Cli.new 'script-name', ['-v']
+      end
+
+      assert_equal 0, error.status
+    end
+  end
+
+  def test_version_long
+    assert_output(/^script-name \d+\.\d+\.\d+$/) do
+      error = assert_raises SystemExit do
+        AsciidoctorDitaMap::Cli.new 'script-name', ['--version']
+      end
+
+      assert_equal 0, error.status
     end
   end
 end
