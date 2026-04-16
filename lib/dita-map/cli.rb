@@ -175,7 +175,12 @@ module AsciidoctorDitaMap
         xml_parent   = stack.last[:element]
 
         if @opts[:navtitle] or @opts[:type]
-          include_title, include_type = parse_topic prepended + File.read(base_dir + target)
+          begin
+            include_title, include_type = parse_topic prepended + File.read(base_dir + target)
+          rescue
+            warn "#{@name}: warning: Unable to read included file: #{base_dir + target}"
+            include_title, include_type = nil, nil
+          end
         end
 
         if include_type == 'map'
