@@ -1,5 +1,7 @@
 require 'minitest/autorun'
 require 'minitest/mock'
+require 'pathname'
+require_relative 'helper'
 require_relative '../lib/dita-map/cli'
 
 class CliTest < Minitest::Test
@@ -113,7 +115,7 @@ class CliTest < Minitest::Test
   end
 
   def test_prepend_file_long
-    file = 'attributes.adoc'
+    file= 'attributes.adoc'
 
     File.stub :exist?, true do
       File.stub :file?, true do
@@ -200,6 +202,20 @@ class CliTest < Minitest::Test
     assert_equal false, opts[:navtitle]
   end
 
+  def test_no_navtitle_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-navtitle']
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 0, '//topicref/@navtitle'
+        end
+      end
+    end
+  end
+
   def test_no_type_short
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-T']
     opts = cli.instance_variable_get :@opts
@@ -212,6 +228,20 @@ class CliTest < Minitest::Test
     opts = cli.instance_variable_get :@opts
 
     assert_equal false, opts[:type]
+  end
+
+  def test_no_type_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-type']
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 0, '//topicref/@type'
+        end
+      end
+    end
   end
 
   def test_help_short
@@ -251,6 +281,87 @@ class CliTest < Minitest::Test
       end
 
       assert_equal 0, error.status
+    end
+  end
+
+  def test_convert_map_title
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+
+    cli.stub :parse_map, [[], 'A map title'] do
+      xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_equal xml, 'A map title', '/map/title/text()'
+    end
+  end
+
+  def test_convert_map_no_title
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+
+    cli.stub :parse_map, [[], nil] do
+      xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_count xml, 0, '/map/title'
+    end
+  end
+
+  def test_convert_map_topicref
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 1, '//topicref'
+          assert_xpath_count xml, 0, '//mapref'
+          assert_xpath_equal xml, 'file.dita', '/map/topicref/@href'
+          assert_xpath_equal xml, 'A topic title', '/map/topicref/@navtitle'
+          assert_xpath_equal xml, 'concept', '/map/topicref/@type'
+        end
+      end
+    end
+  end
+
+  def test_convert_map_mapref
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+        cli.stub :parse_topic, ['A map title', 'map'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 1, '//mapref'
+          assert_xpath_count xml, 0, '//topicref'
+          assert_xpath_equal xml, 'file.ditamap', '/map/mapref/@href'
+          assert_xpath_equal xml, 'ditamap', '/map/mapref/@format'
+          assert_xpath_equal xml, 'map', '/map/mapref/@type'
+        end
+      end
+    end
+  end
+
+  def test_convert_map_nesting
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    incl = [
+      { :target => 'file-1.adoc', :offset => 1 },
+      { :target => 'file-2.adoc', :offset => 2 },
+      { :target => 'file-3.adoc', :offset => 3 },
+      { :target => 'file-4.adoc', :offset => 2 },
+      { :target => 'file-5.adoc', :offset => 1 }
+    ]
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [incl] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_equal xml, 'file-1.dita', '/map/topicref[1]/@href'
+          assert_xpath_equal xml, 'file-2.dita', '/map/topicref[1]/topicref[1]/@href'
+          assert_xpath_equal xml, 'file-3.dita', '/map/topicref[1]/topicref[1]/topicref/@href'
+          assert_xpath_equal xml, 'file-4.dita', '/map/topicref[1]/topicref[2]/@href'
+          assert_xpath_equal xml, 'file-5.dita', '/map/topicref[2]/@href'
+        end
+      end
     end
   end
 end
