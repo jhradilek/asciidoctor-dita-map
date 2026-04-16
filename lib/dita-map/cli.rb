@@ -105,7 +105,7 @@ module AsciidoctorDitaMap
       doc = Asciidoctor.load input, safe: :secure, attributes: @attr
       att = doc.attributes
 
-      document_title = doc.title ? doc.title.gsub(/"|<[^>]*>|[<>]/, '') : nil
+      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
       document_type  = att['_mod-docs-content-type'] ? att['_mod-docs-content-type'].downcase : nil
       document_type  = att['_content-type'] ? att['_content-type'].downcase : nil unless document_type
       document_type  = att['_module-type'] ? att['_module-type'].downcase : nil unless document_type
@@ -131,7 +131,7 @@ module AsciidoctorDitaMap
       doc = Asciidoctor.load input, safe: :safe, catalog_assets: true, attributes: @attr, base_dir: base_dir
 
       include_files  = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
-      document_title = doc.title ? doc.title.gsub(/"|<[^>]*>|[<>]/, '') : nil
+      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
 
       return include_files, document_title
     end
