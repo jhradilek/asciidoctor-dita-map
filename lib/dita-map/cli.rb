@@ -142,6 +142,7 @@ module AsciidoctorDitaMap
       include_files, map_title = parse_map prepended + input, base_dir
 
       xml = REXML::Document.new
+      xml.context[:attribute_quote] = :quote
       xml << REXML::XMLDecl.new('1.0', 'utf-8')
       xml << REXML::DocType.new('map', 'PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd"')
 
