@@ -205,6 +205,8 @@ module AsciidoctorDitaMap
       formatter.compact = true
       formatter.write(xml, result)
 
+      result << "\n"
+
       return result
     end
 
