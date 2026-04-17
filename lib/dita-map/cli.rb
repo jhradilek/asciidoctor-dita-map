@@ -33,6 +33,7 @@ module AsciidoctorDitaMap
     def initialize name, argv
       @attr = []
       @opts = {
+        :id => true,
         :navtitle => true,
         :output => false,
         :type => true
@@ -65,6 +66,10 @@ module AsciidoctorDitaMap
         end
 
         opt.separator ''
+
+        opt.on('-I', '--no-id', 'do not generate the map id attribute') do
+          @opts[:id] = false
+        end
 
         opt.on('-N', '--no-navtitle', 'do not generate the navtitle attribute') do
           @opts[:navtitle] = false
@@ -132,21 +137,26 @@ module AsciidoctorDitaMap
 
       include_files  = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
       document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
+      document_id    = doc.id ? doc.id.gsub(/["']/, '') : nil
 
-      return include_files, document_title
+      return include_files, document_title, document_id
     end
 
     def convert_map input, base_dir, prepended = ''
       result = ''
 
-      include_files, map_title = parse_map prepended + input, base_dir
+      include_files, map_title, document_id = parse_map prepended + input, base_dir
 
       xml = REXML::Document.new
       xml.context[:attribute_quote] = :quote
       xml << REXML::XMLDecl.new('1.0', 'utf-8')
       xml << REXML::DocType.new('map', 'PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd"')
 
-      xml_root  = xml.add_element('map')
+      if document_id and @opts[:id]
+        xml_root  = xml.add_element('map', { 'id' => document_id })
+      else
+        xml_root  = xml.add_element('map')
+      end
 
       if map_title
         xml_title = xml_root.add_element('title')

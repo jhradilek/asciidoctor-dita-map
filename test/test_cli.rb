@@ -12,6 +12,7 @@ class CliTest < Minitest::Test
     prep = cli.instance_variable_get :@prep
 
     assert_equal false, opts[:output]
+    assert_equal true, opts[:id]
     assert_equal true, opts[:navtitle]
     assert_equal true, opts[:type]
     assert_equal [], attr
@@ -188,6 +189,30 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_no_id_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-I']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:id]
+  end
+
+  def test_no_id_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-id']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:id]
+  end
+
+  def test_no_id_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-id']
+
+    cli.stub :parse_map, [[], nil, 'map-id'] do
+      xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_count xml, 0, '/map/@id'
+    end
+  end
+
   def test_no_navtitle_short
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-N']
     opts = cli.instance_variable_get :@opts
@@ -281,6 +306,26 @@ class CliTest < Minitest::Test
       end
 
       assert_equal 0, error.status
+    end
+  end
+
+  def test_convert_map_id
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+
+    cli.stub :parse_map, [[], 'A map title', 'map-id'] do
+      xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_equal xml, 'map-id', '/map/@id'
+    end
+  end
+
+  def test_convert_map_no_id
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+
+    cli.stub :parse_map, [[], 'A map title', nil] do
+      xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_count xml, 0, '/map/@id'
     end
   end
 
