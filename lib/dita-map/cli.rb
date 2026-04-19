@@ -36,6 +36,7 @@ module AsciidoctorDitaMap
         :id => true,
         :navtitle => true,
         :output => false,
+        :title => true,
         :type => true
       }
       @prep = []
@@ -69,6 +70,10 @@ module AsciidoctorDitaMap
 
         opt.on('-I', '--no-id', 'do not generate the map id attribute') do
           @opts[:id] = false
+        end
+
+        opt.on('-M', '--no-maptitle', 'do not generate the map title') do
+          @opts[:title] = false
         end
 
         opt.on('-N', '--no-navtitle', 'do not generate the navtitle attribute') do
@@ -158,7 +163,7 @@ module AsciidoctorDitaMap
         xml_root  = xml.add_element('map')
       end
 
-      if map_title
+      if map_title and @opts[:title]
         xml_title = xml_root.add_element('title')
         xml_title.text = map_title
       end

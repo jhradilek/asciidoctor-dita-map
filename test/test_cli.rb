@@ -14,6 +14,7 @@ class CliTest < Minitest::Test
     assert_equal false, opts[:output]
     assert_equal true, opts[:id]
     assert_equal true, opts[:navtitle]
+    assert_equal true, opts[:title]
     assert_equal true, opts[:type]
     assert_equal [], attr
     assert_equal [], prep
@@ -210,6 +211,30 @@ class CliTest < Minitest::Test
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/@id'
+    end
+  end
+
+  def test_no_maptitle_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-M']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:title]
+  end
+
+  def test_no_maptitle_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-maptitle']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:title]
+  end
+
+  def test_no_maptitle_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-maptitle']
+
+    cli.stub :parse_map, [[], 'A map title'] do
+      xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_count xml, 0, '/map/title'
     end
   end
 
