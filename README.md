@@ -35,7 +35,7 @@ $ echo 'include::task.adoc[leveloffset=+1]' | dita-map
 </map>
 ```
 
-### Specifying the output file name
+### Changing the output file name
 
 To change the output file name or location, use the `-o` or `--out-file` command-line option:
 
@@ -57,6 +57,26 @@ $ dita-map input_file.adoc -o -
   </topicref>
 </map>
 ```
+
+### Supplying individual attribute definitions
+
+If your AsciiDoc files use custom attributes that are defined outside of them, you can supply the attribute definitions with the `-a` or `--attribute` command-line option:
+
+```console
+$ dita-map -a attribute_name=attribute_value your_file.adoc
+```
+
+You can supply multiple `-a`/`--attribute` options at the same time.
+
+### Supplying attribute definition files
+
+If listing individual attribute definitions is impractical, you can supply AsciiDoc files with the attribute definitions in them with the `-p` or `--prepend-file` command-line option:
+
+```console
+$ dita-map -p definition_file.adoc your_file.adoc
+```
+
+The supplied file is prepended to each AsciiDoc file during conversion. You can supply multiple `-p`/`--prepend-file` options at the same time or combine them with the `-a`/`--attribute` options to construct your attribute definitions. If you define the same attribute twice this way, the value defined by the `-a`/`--attribute` option takes precedence.
 
 ## Recognized content types
 
