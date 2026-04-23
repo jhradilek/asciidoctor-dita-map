@@ -206,7 +206,7 @@ module AsciidoctorDitaMap
           begin
             include_title, include_type = parse_topic prepended + File.read(full_path)
           rescue
-            warn "#{@name}: warning: Unable to read included file: #{full_path}"
+            warn "#{@name}: warning: Unable to read included file: #{target}"
             include_title, include_type = nil, nil
           end
         end
