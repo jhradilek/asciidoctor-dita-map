@@ -12,6 +12,7 @@ class CliTest < Minitest::Test
     prep = cli.instance_variable_get :@prep
 
     assert_equal false, opts[:output]
+    assert_equal false, opts[:verbose]
     assert_equal true, opts[:id]
     assert_equal true, opts[:navtitle]
     assert_equal true, opts[:title]
@@ -294,6 +295,20 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_verbose_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-v']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal true, opts[:verbose]
+  end
+
+  def test_verbose_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--verbose']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal true, opts[:verbose]
+  end
+
   def test_help_short
     assert_output(/^Usage: script-name /) do
       error = assert_raises SystemExit do
@@ -317,7 +332,7 @@ class CliTest < Minitest::Test
   def test_version_short
     assert_output(/^script-name \d+\.\d+\.\d+$/) do
       error = assert_raises SystemExit do
-        AsciidoctorDitaMap::Cli.new 'script-name', ['-v']
+        AsciidoctorDitaMap::Cli.new 'script-name', ['-V']
       end
 
       assert_equal 0, error.status
