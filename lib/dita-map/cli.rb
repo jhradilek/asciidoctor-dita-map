@@ -139,7 +139,6 @@ module AsciidoctorDitaMap
       return document_title, document_type
     end
 
-
     def parse_map input, base_dir
       Asciidoctor::Extensions.register do
         include_processor CatalogIncludeDirectives
@@ -184,15 +183,15 @@ module AsciidoctorDitaMap
         full_path   = base_dir + target
 
         if not File.exist? full_path and @opts[:verbose]
-          warn "#{@name}: warning: File not found: #{target}"
+          warn "#{@name}: warning: file not found: #{target}"
         end
 
         if offset == 0
-          warn "#{@name}: warning: Invalid leveloffset - expected 1, got 0: #{target}"
+          warn "#{@name}: warning: invalid leveloffset - expected 1, got 0: #{target}"
           offset = 1
         elsif offset > last_offset and offset - last_offset > 1
           expected_offset = last_offset + 1
-          warn "#{@name}: warning: Invalid leveloffset - expected #{expected_offset}, got #{offset}: #{target}"
+          warn "#{@name}: warning: invalid leveloffset - expected #{expected_offset}, got #{offset}: #{target}"
           offset = expected_offset
         end
 
@@ -206,7 +205,7 @@ module AsciidoctorDitaMap
           begin
             include_title, include_type = parse_topic prepended + File.read(full_path)
           rescue
-            warn "#{@name}: warning: Unable to read included file: #{target}"
+            warn "#{@name}: warning: unable to read included file: #{target}"
             include_title, include_type = nil, nil
           end
         end

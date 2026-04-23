@@ -309,6 +309,19 @@ class CliTest < Minitest::Test
     assert_equal true, opts[:verbose]
   end
 
+  def test_verbose_warning
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--verbose']
+    file = 'file.adoc'
+
+    cli.stub :parse_map, [[{ :target => file, :offset => 1 }]] do
+      File.stub :exist?, false do
+        assert_output(nil, /file not found: #{file}/) do
+          cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+        end
+      end
+    end
+  end
+
   def test_help_short
     assert_output(/^Usage: script-name /) do
       error = assert_raises SystemExit do
