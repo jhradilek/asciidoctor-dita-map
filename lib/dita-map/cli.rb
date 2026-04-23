@@ -37,7 +37,8 @@ module AsciidoctorDitaMap
         :navtitle => true,
         :output => false,
         :title => true,
-        :type => true
+        :type => true,
+        :verbose => false
       }
       @prep = []
       @name = name
@@ -86,12 +87,18 @@ module AsciidoctorDitaMap
 
         opt.separator ''
 
+        opt.on('-v', '--verbose', 'report additional problems in the supplied files') do
+          @opts[:verbose] = true
+        end
+
+        opt.separator ''
+
         opt.on('-h', '--help', 'display this help and exit') do
           puts opt
           exit
         end
 
-        opt.on('-v', '--version', 'display version information and exit') do
+        opt.on('-V', '--version', 'display version information and exit') do
           puts "#{@name} #{VERSION}"
           exit
         end
@@ -131,7 +138,6 @@ module AsciidoctorDitaMap
 
       return document_title, document_type
     end
-
 
     def parse_map input, base_dir
       Asciidoctor::Extensions.register do
@@ -174,13 +180,18 @@ module AsciidoctorDitaMap
         target      = file[:target]
         offset      = file[:offset]
         last_offset = stack.last[:offset]
+        full_path   = base_dir + target
+
+        if not File.exist? full_path and @opts[:verbose]
+          warn "#{@name}: warning: file not found: #{target}"
+        end
 
         if offset == 0
-          warn "#{@name}: warning: Invalid leveloffset - expected 1, got 0: #{target}"
+          warn "#{@name}: warning: invalid leveloffset - expected 1, got 0: #{target}"
           offset = 1
         elsif offset > last_offset and offset - last_offset > 1
           expected_offset = last_offset + 1
-          warn "#{@name}: warning: Invalid leveloffset - expected #{expected_offset}, got #{offset}: #{target}"
+          warn "#{@name}: warning: invalid leveloffset - expected #{expected_offset}, got #{offset}: #{target}"
           offset = expected_offset
         end
 
@@ -192,9 +203,9 @@ module AsciidoctorDitaMap
 
         if @opts[:navtitle] or @opts[:type]
           begin
-            include_title, include_type = parse_topic prepended + File.read(base_dir + target)
+            include_title, include_type = parse_topic prepended + File.read(full_path)
           rescue
-            warn "#{@name}: warning: Unable to read included file: #{base_dir + target}"
+            warn "#{@name}: warning: unable to read included file: #{target}"
             include_title, include_type = nil, nil
           end
         end
