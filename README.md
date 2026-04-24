@@ -60,7 +60,7 @@ $ dita-map input_file.adoc -o -
 
 ### Supplying individual attribute definitions
 
-If your AsciiDoc files use custom attributes that are defined outside of them, you can supply the attribute definitions with the `-a` or `--attribute` command-line option:
+If your AsciiDoc files use custom attributes that are defined externally, you can supply the attribute definitions with the `-a` or `--attribute` command-line option:
 
 ```console
 $ dita-map -a attribute_name=attribute_value your_file.adoc
@@ -70,7 +70,7 @@ You can supply multiple `-a`/`--attribute` options at the same time.
 
 ### Supplying attribute definition files
 
-If listing individual attribute definitions is impractical, you can supply AsciiDoc files with the attribute definitions in them with the `-p` or `--prepend-file` command-line option:
+If listing individual attribute definitions is impractical, you can supply AsciiDoc files that contain the attribute definitions with the `-p` or `--prepend-file` command-line option:
 
 ```console
 $ dita-map -p definition_file.adoc your_file.adoc
