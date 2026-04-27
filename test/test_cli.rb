@@ -462,4 +462,31 @@ class CliTest < Minitest::Test
       end
     end
   end
+
+  def test_convert_map_invalid_leveloffset
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    incl = [
+      { :target => 'file-1.adoc', :offset => 3 },
+      { :target => 'file-2.adoc', :offset => 4 },
+      { :target => 'file-3.adoc', :offset => 5 },
+      { :target => 'file-4.adoc', :offset => 4 },
+      { :target => 'file-5.adoc', :offset => 2 }
+    ]
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [incl] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+          assert_output(nil, /invalid leveloffset/) do
+            xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+            assert_xpath_equal xml, 'file-1.dita', '/map/topicref[1]/@href'
+            assert_xpath_equal xml, 'file-2.dita', '/map/topicref[1]/topicref[1]/@href'
+            assert_xpath_equal xml, 'file-3.dita', '/map/topicref[1]/topicref[1]/topicref/@href'
+            assert_xpath_equal xml, 'file-4.dita', '/map/topicref[1]/topicref[2]/@href'
+            assert_xpath_equal xml, 'file-5.dita', '/map/topicref[2]/@href'
+          end
+        end
+      end
+    end
+  end
 end

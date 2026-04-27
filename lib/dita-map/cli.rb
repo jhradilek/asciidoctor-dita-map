@@ -192,7 +192,6 @@ module AsciidoctorDitaMap
         elsif offset > last_offset and offset - last_offset > 1
           expected_offset = last_offset + 1
           warn "#{@name}: warning: invalid leveloffset - expected #{expected_offset}, got #{offset}: #{target}"
-          offset = expected_offset
         end
 
         while stack.last[:offset] >= offset
