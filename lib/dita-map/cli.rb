@@ -132,7 +132,7 @@ module AsciidoctorDitaMap
         document_type.sub!(/^procedure$/, 'task')
       end
 
-      unless ['concept', 'reference', 'task', 'map'].include? document_type
+      unless ['concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? document_type
         document_type = nil
       end
 
@@ -186,6 +186,14 @@ module AsciidoctorDitaMap
           warn "#{@name}: warning: file not found: #{target}"
         end
 
+        begin
+          include_title, include_type = parse_topic prepended + File.read(full_path)
+          next if ['attributes', 'snippet'].include? include_type
+        rescue
+          warn "#{@name}: warning: unable to read included file: #{target}"
+          include_title, include_type = nil, nil
+        end
+
         if offset == 0
           warn "#{@name}: warning: invalid leveloffset - expected 1, got 0: #{target}"
           offset = 1
@@ -198,16 +206,7 @@ module AsciidoctorDitaMap
           stack.pop
         end
 
-        xml_parent   = stack.last[:element]
-
-        if @opts[:navtitle] or @opts[:type]
-          begin
-            include_title, include_type = parse_topic prepended + File.read(full_path)
-          rescue
-            warn "#{@name}: warning: unable to read included file: #{target}"
-            include_title, include_type = nil, nil
-          end
-        end
+        xml_parent = stack.last[:element]
 
         if include_type == 'map'
           file_name          = target.sub(/\.adoc$/, '.ditamap')
