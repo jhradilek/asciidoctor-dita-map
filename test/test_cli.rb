@@ -438,6 +438,21 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_convert_map_attributes
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+        cli.stub :parse_topic, [nil, 'attributes'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 0, '//mapref'
+          assert_xpath_count xml, 0, '//topicref'
+        end
+      end
+    end
+  end
+
   def test_convert_map_nesting
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
     incl = [
