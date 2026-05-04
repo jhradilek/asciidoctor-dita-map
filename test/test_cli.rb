@@ -497,6 +497,59 @@ class CliTest < Minitest::Test
     assert_equal 'snippet', type
   end
 
+  def test_parse_map_structure
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    [id="map-id"]
+    = A map title
+
+    include::file-1.adoc[leveloffset=+1]
+    include::file-2.adoc[leveloffset=+2]
+    EOF
+
+    include_files, title, id = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
+
+    assert_equal 'map-id', id
+    assert_equal 'A map title', title
+    assert_equal include_files[0], { :target => 'file-1.adoc', :offset => 1 }
+    assert_equal include_files[1], { :target => 'file-2.adoc', :offset => 2 }
+  end
+
+  def test_parse_map_no_includes
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    [id="map-id"]
+    = A map title
+    EOF
+
+    include_files, _, _ = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
+
+    assert_empty include_files
+  end
+
+  def test_parse_map_no_id
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    = A map title
+    EOF
+
+    _, _, id = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
+
+    assert_nil id
+  end
+
+  def test_parse_map_no_title
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    include::file-1.adoc[leveloffset=+1]
+    include::file-2.adoc[leveloffset=+2]
+    EOF
+
+    _, title, _ = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
+
+    assert_nil title
+  end
+
   def test_convert_map_id
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
