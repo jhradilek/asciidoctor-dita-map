@@ -362,6 +362,141 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_parse_topic_structure
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: CONCEPT
+
+    = A topic title
+    EOF
+
+    title, type = cli.parse_topic adoc
+
+    assert_equal 'A topic title', title
+    assert_equal 'concept', type
+  end
+
+  def test_parse_topic_no_title
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: CONCEPT
+    EOF
+
+    title, _ = cli.parse_topic adoc
+
+    assert_nil title
+  end
+
+  def test_parse_topic_no_type
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    = A topic title
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_nil type
+  end
+
+  def test_parse_topic_invalid_type
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: UNKNOWN
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_nil type
+  end
+
+  def test_parse_topic_content_type
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_content-type: CONCEPT
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_equal 'concept', type
+  end
+
+  def test_parse_topic_module_type
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_module-type: CONCEPT
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_equal 'concept', type
+  end
+
+  def test_parse_topic_assembly
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: ASSEMBLY
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_equal 'concept', type
+  end
+
+  def test_parse_topic_procedure
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: PROCEDURE
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_equal 'task', type
+  end
+
+  def test_parse_topic_reference
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: REFERENCE
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_equal 'reference', type
+  end
+
+  def test_parse_topic_map
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: MAP
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_equal 'map', type
+  end
+
+  def test_parse_topic_attributes
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: ATTRIBUTES
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_equal 'attributes', type
+  end
+
+  def test_parse_topic_snippet
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    adoc = <<~EOF.chomp
+    :_mod-docs-content-type: SNIPPET
+    EOF
+
+    _, type = cli.parse_topic adoc
+
+    assert_equal 'snippet', type
+  end
+
   def test_convert_map_id
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
