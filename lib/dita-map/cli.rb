@@ -118,14 +118,10 @@ module AsciidoctorDitaMap
       return args
     end
 
-    def parse_topic input
-      doc = Asciidoctor.load input, safe: :secure, attributes: @attr
-      att = doc.attributes
-
-      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-      document_type  = att['_mod-docs-content-type'] ? att['_mod-docs-content-type'].downcase : nil
-      document_type  = att['_content-type'] ? att['_content-type'].downcase : nil unless document_type
-      document_type  = att['_module-type'] ? att['_module-type'].downcase : nil unless document_type
+    def get_content_type attributes
+      document_type  = attributes['_mod-docs-content-type'] ? attributes['_mod-docs-content-type'].downcase : nil
+      document_type  = attributes['_content-type'] ? attributes['_content-type'].downcase : nil unless document_type
+      document_type  = attributes['_module-type'] ? attributes['_module-type'].downcase : nil unless document_type
 
       if document_type
         document_type.sub!(/^assembly$/, 'concept')
@@ -133,8 +129,17 @@ module AsciidoctorDitaMap
       end
 
       unless ['concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? document_type
-        document_type = nil
+        return nil
       end
+
+      return document_type
+    end
+
+    def parse_topic input
+      doc = Asciidoctor.load input, safe: :secure, attributes: @attr
+
+      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
+      document_type  = get_content_type doc.attributes
 
       return document_title, document_type
     end
