@@ -38,6 +38,7 @@ module AsciidoctorDitaMap
         :output => false,
         :title => true,
         :type => true,
+        :self => false,
         :verbose => false
       }
       @prep = []
@@ -65,6 +66,10 @@ module AsciidoctorDitaMap
           raise OptionParser::InvalidArgument, "file not readable: #{file}" unless File.readable? file
 
           @prep.append file
+        end
+
+        opt.on('-i', '--include-self', 'make the supplied file the toplevel topicref') do
+          @opts[:self] = true
         end
 
         opt.separator ''
@@ -118,14 +123,28 @@ module AsciidoctorDitaMap
       return args
     end
 
-    def parse_topic input
-      doc = Asciidoctor.load input, safe: :secure, attributes: @attr
-      att = doc.attributes
+    def compose_mapref_attributes file_name, type
+      target_file        = file_name.sub(/\.adoc$/, '.ditamap')
+      attributes         = { 'href' => target_file, 'format' => 'ditamap' }
+      attributes['type'] = type if @opts[:type]
 
-      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-      document_type  = att['_mod-docs-content-type'] ? att['_mod-docs-content-type'].downcase : nil
-      document_type  = att['_content-type'] ? att['_content-type'].downcase : nil unless document_type
-      document_type  = att['_module-type'] ? att['_module-type'].downcase : nil unless document_type
+      return attributes
+    end
+
+    def compose_topicref_attributes file_name, title, type
+      target_file            = file_name.sub(/\.adoc$/, '.dita')
+
+      attributes             = { 'href' => target_file }
+      attributes['navtitle'] = title if @opts[:navtitle] and title
+      attributes['type']     = type if @opts[:type] and type and ['concept', 'reference', 'task'].include? type
+
+      return attributes
+    end
+
+    def get_content_type attributes
+      document_type  = attributes['_mod-docs-content-type'] ? attributes['_mod-docs-content-type'].downcase : nil
+      document_type  = attributes['_content-type'] ? attributes['_content-type'].downcase : nil unless document_type
+      document_type  = attributes['_module-type'] ? attributes['_module-type'].downcase : nil unless document_type
 
       if document_type
         document_type.sub!(/^assembly$/, 'concept')
@@ -133,8 +152,17 @@ module AsciidoctorDitaMap
       end
 
       unless ['concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? document_type
-        document_type = nil
+        return nil
       end
+
+      return document_type
+    end
+
+    def parse_topic input
+      doc = Asciidoctor.load input, safe: :secure, attributes: @attr
+
+      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
+      document_type  = get_content_type doc.attributes
 
       return document_title, document_type
     end
@@ -147,34 +175,47 @@ module AsciidoctorDitaMap
       doc = Asciidoctor.load input, safe: :safe, catalog_assets: true, attributes: @attr, base_dir: base_dir
 
       include_files  = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
-      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-      document_id    = doc.id ? doc.id.gsub(/["']/, '') : nil
+      map_id    = doc.id ? doc.id.gsub(/["']/, '') : nil
+      map_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
+      map_type  = get_content_type doc.attributes
 
-      return include_files, document_title, document_id
+      info = {
+        :id    => map_id,
+        :title => map_title,
+        :type  => map_type
+      }
+
+      return include_files, info
     end
 
-    def convert_map input, base_dir, prepended = ''
+    def convert_map input, base_dir, prepended = '', file = nil
       result = ''
 
-      include_files, map_title, document_id = parse_map prepended + input, base_dir
+      include_files, map = parse_map prepended + input, base_dir
 
       xml = REXML::Document.new
       xml.context[:attribute_quote] = :quote
       xml << REXML::XMLDecl.new('1.0', 'utf-8')
       xml << REXML::DocType.new('map', 'PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd"')
 
-      if document_id and @opts[:id]
-        xml_root  = xml.add_element('map', { 'id' => document_id })
+      if map[:id] and @opts[:id]
+        xml_root  = xml.add_element('map', { 'id' => map[:id] })
       else
         xml_root  = xml.add_element('map')
       end
 
-      if map_title and @opts[:title]
-        xml_title = xml_root.add_element('title')
-        xml_title.text = map_title
+      if map[:title] and @opts[:title]
+        xml_title      = xml_root.add_element('title')
+        xml_title.text = map[:title]
       end
 
-      stack = [{ :offset => 0, :element => xml_root }]
+      if @opts[:self] and file
+        attributes = compose_topicref_attributes file, map[:title], map[:type]
+        xml_self   = xml_root.add_element('topicref', attributes)
+        stack      = [{ :offset => 0, :element => xml_self }]
+      else
+        stack      = [{ :offset => 0, :element => xml_root }]
+      end
 
       include_files.each do |file|
         target      = file[:target]
@@ -209,17 +250,10 @@ module AsciidoctorDitaMap
         xml_parent = stack.last[:element]
 
         if include_type == 'map'
-          file_name          = target.sub(/\.adoc$/, '.ditamap')
-          attributes         = { 'href' => file_name, 'format' => 'ditamap' }
-          attributes['type'] = include_type if @opts[:type]
-
+          attributes  = compose_mapref_attributes target, include_type
           xml_element = xml_parent.add_element('mapref', attributes)
         else
-          file_name = target.sub(/\.adoc$/, '.dita')
-          attributes             = { 'href' => file_name }
-          attributes['navtitle'] = include_title if include_title and @opts[:navtitle]
-          attributes['type']     = include_type if include_type and @opts[:type]
-
+          attributes  = compose_topicref_attributes target, include_title, include_type
           xml_element = xml_parent.add_element('topicref', attributes)
         end
 
@@ -254,7 +288,11 @@ module AsciidoctorDitaMap
           output   = @opts[:output] ? @opts[:output] : Pathname.new(file).sub_ext('.ditamap').to_s
         end
 
-        result = convert_map input, base_dir, prepended
+        if @opts[:self] and file != $stdin
+          result = convert_map input, base_dir, prepended, file
+        else
+          result = convert_map input, base_dir, prepended
+        end
 
         if output == $stdout
           $stdout.write result

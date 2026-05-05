@@ -12,6 +12,7 @@ class CliTest < Minitest::Test
     prep = cli.instance_variable_get :@prep
 
     assert_equal false, opts[:output]
+    assert_equal false, opts[:self]
     assert_equal false, opts[:verbose]
     assert_equal true, opts[:id]
     assert_equal true, opts[:navtitle]
@@ -191,6 +192,33 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_include_self_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-i']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal true, opts[:self]
+  end
+
+  def test_include_self_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--include-self']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal true, opts[:self]
+  end
+
+  def test_include_self_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--include-self']
+
+    cli.stub :parse_map, [[], { :type => 'concept', :title => 'A topic title' }] do
+      xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path, '', 'file.adoc'
+
+      assert_xpath_count xml, 1, '/map/topicref'
+      assert_xpath_equal xml, 'file.dita', '/map/topicref/@href'
+      assert_xpath_equal xml, 'A topic title', '/map/topicref/@navtitle'
+      assert_xpath_equal xml, 'concept', '/map/topicref/@type'
+    end
+  end
+
   def test_no_id_short
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-I']
     opts = cli.instance_variable_get :@opts
@@ -208,7 +236,7 @@ class CliTest < Minitest::Test
   def test_no_id_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-id']
 
-    cli.stub :parse_map, [[], nil, 'map-id'] do
+    cli.stub :parse_map, [[], { :id => 'map-id' }] do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/@id'
@@ -232,7 +260,7 @@ class CliTest < Minitest::Test
   def test_no_maptitle_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-maptitle']
 
-    cli.stub :parse_map, [[], 'A map title'] do
+    cli.stub :parse_map, [[], { :title => 'A map title' }] do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/title'
@@ -257,7 +285,7 @@ class CliTest < Minitest::Test
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-navtitle']
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
         cli.stub :parse_topic, ['A topic title', 'concept'] do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -285,7 +313,7 @@ class CliTest < Minitest::Test
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-type']
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
         cli.stub :parse_topic, ['A topic title', 'concept'] do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -313,7 +341,7 @@ class CliTest < Minitest::Test
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--verbose']
     file = 'file.adoc'
 
-    cli.stub :parse_map, [[{ :target => file, :offset => 1 }]] do
+    cli.stub :parse_map, [[{ :target => file, :offset => 1 }], {}] do
       File.stub :exist?, false do
         assert_output(nil, /file not found: #{file}/) do
           cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
@@ -507,10 +535,10 @@ class CliTest < Minitest::Test
     include::file-2.adoc[leveloffset=+2]
     EOF
 
-    include_files, title, id = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
+    include_files, map = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
 
-    assert_equal 'map-id', id
-    assert_equal 'A map title', title
+    assert_equal 'map-id', map[:id]
+    assert_equal 'A map title', map[:title]
     assert_equal include_files[0], { :target => 'file-1.adoc', :offset => 1 }
     assert_equal include_files[1], { :target => 'file-2.adoc', :offset => 2 }
   end
@@ -522,7 +550,7 @@ class CliTest < Minitest::Test
     = A map title
     EOF
 
-    include_files, _, _ = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
+    include_files, _ = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
 
     assert_empty include_files
   end
@@ -533,9 +561,9 @@ class CliTest < Minitest::Test
     = A map title
     EOF
 
-    _, _, id = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
+    _, map = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
 
-    assert_nil id
+    assert_nil map[:id]
   end
 
   def test_parse_map_no_title
@@ -545,15 +573,15 @@ class CliTest < Minitest::Test
     include::file-2.adoc[leveloffset=+2]
     EOF
 
-    _, title, _ = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
+    _, map = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
 
-    assert_nil title
+    assert_nil map[:title]
   end
 
   def test_convert_map_id
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
-    cli.stub :parse_map, [[], 'A map title', 'map-id'] do
+    cli.stub :parse_map, [[], { :title => 'A map title', :id => 'map-id' }] do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_equal xml, 'map-id', '/map/@id'
@@ -563,7 +591,7 @@ class CliTest < Minitest::Test
   def test_convert_map_no_id
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
-    cli.stub :parse_map, [[], 'A map title', nil] do
+    cli.stub :parse_map, [[], { :title => 'A map title', :id => nil }] do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/@id'
@@ -573,7 +601,7 @@ class CliTest < Minitest::Test
   def test_convert_map_title
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
-    cli.stub :parse_map, [[], 'A map title'] do
+    cli.stub :parse_map, [[], { :title => 'A map title' }] do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_equal xml, 'A map title', '/map/title/text()'
@@ -583,7 +611,7 @@ class CliTest < Minitest::Test
   def test_convert_map_no_title
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
-    cli.stub :parse_map, [[], nil] do
+    cli.stub :parse_map, [[], { :title => nil }] do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/title'
@@ -594,7 +622,7 @@ class CliTest < Minitest::Test
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
         cli.stub :parse_topic, ['A topic title', 'concept'] do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -612,7 +640,7 @@ class CliTest < Minitest::Test
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
         cli.stub :parse_topic, ['A map title', 'map'] do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -630,7 +658,7 @@ class CliTest < Minitest::Test
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }]] do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
         cli.stub :parse_topic, [nil, 'attributes'] do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -652,7 +680,7 @@ class CliTest < Minitest::Test
     ]
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [incl] do
+      cli.stub :parse_map, [incl, {}] do
         cli.stub :parse_topic, ['A topic title', 'concept'] do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -677,7 +705,7 @@ class CliTest < Minitest::Test
     ]
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [incl] do
+      cli.stub :parse_map, [incl, {}] do
         cli.stub :parse_topic, ['A topic title', 'concept'] do
           assert_output(nil, /invalid leveloffset/) do
             xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
