@@ -152,31 +152,38 @@ module AsciidoctorDitaMap
       doc = Asciidoctor.load input, safe: :safe, catalog_assets: true, attributes: @attr, base_dir: base_dir
 
       include_files  = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
-      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-      document_id    = doc.id ? doc.id.gsub(/["']/, '') : nil
+      map_id    = doc.id ? doc.id.gsub(/["']/, '') : nil
+      map_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
+      map_type  = get_content_type doc.attributes
 
-      return include_files, document_title, document_id
+      info = {
+        :id    => map_id,
+        :title => map_title,
+        :type  => map_type
+      }
+
+      return include_files, info
     end
 
     def convert_map input, base_dir, prepended = ''
       result = ''
 
-      include_files, map_title, document_id = parse_map prepended + input, base_dir
+      include_files, map = parse_map prepended + input, base_dir
 
       xml = REXML::Document.new
       xml.context[:attribute_quote] = :quote
       xml << REXML::XMLDecl.new('1.0', 'utf-8')
       xml << REXML::DocType.new('map', 'PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd"')
 
-      if document_id and @opts[:id]
-        xml_root  = xml.add_element('map', { 'id' => document_id })
+      if map[:id] and @opts[:id]
+        xml_root  = xml.add_element('map', { 'id' => map[:id] })
       else
         xml_root  = xml.add_element('map')
       end
 
-      if map_title and @opts[:title]
+      if map[:title] and @opts[:title]
         xml_title = xml_root.add_element('title')
-        xml_title.text = map_title
+        xml_title.text = map[:title]
       end
 
       stack = [{ :offset => 0, :element => xml_root }]
