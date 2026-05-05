@@ -12,6 +12,7 @@ class CliTest < Minitest::Test
     prep = cli.instance_variable_get :@prep
 
     assert_equal false, opts[:output]
+    assert_equal false, opts[:self]
     assert_equal false, opts[:verbose]
     assert_equal true, opts[:id]
     assert_equal true, opts[:navtitle]
@@ -188,6 +189,33 @@ class CliTest < Minitest::Test
           assert_match(/file not readable: #{file}/, error.message)
         end
       end
+    end
+  end
+
+  def test_include_self_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-i']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal true, opts[:self]
+  end
+
+  def test_include_self_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--include-self']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal true, opts[:self]
+  end
+
+  def test_include_self_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--include-self']
+
+    cli.stub :parse_map, [[], { :type => 'concept', :title => 'A topic title' }] do
+      xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path, '', 'file.adoc'
+
+      assert_xpath_count xml, 1, '/map/topicref'
+      assert_xpath_equal xml, 'file.dita', '/map/topicref/@href'
+      assert_xpath_equal xml, 'A topic title', '/map/topicref/@navtitle'
+      assert_xpath_equal xml, 'concept', '/map/topicref/@type'
     end
   end
 
