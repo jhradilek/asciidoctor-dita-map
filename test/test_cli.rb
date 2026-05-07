@@ -539,8 +539,10 @@ class CliTest < Minitest::Test
 
     assert_equal 'map-id', map[:id]
     assert_equal 'A map title', map[:title]
-    assert_equal include_files[0], { :target => 'file-1.adoc', :offset => 1 }
-    assert_equal include_files[1], { :target => 'file-2.adoc', :offset => 2 }
+    assert_equal include_files[0][:target], 'file-1.adoc'
+    assert_equal include_files[0][:offset], 1
+    assert_equal include_files[1][:target], 'file-2.adoc'
+    assert_equal include_files[1][:offset], 2
   end
 
   def test_parse_map_no_includes

@@ -7,8 +7,8 @@ class CatalogTest < Minitest::Test
     = A map title
 
     include::file_1.adoc[]
-    include::file_2.adoc[leveloffset=+1]
-    include::file_3.adoc[leveloffset=+2]
+    include::file_2.adoc[leveloffset=+1,chunk="to-content"]
+    include::file_3.adoc[leveloffset=+2,toc="no"]
     EOF
 
     Asciidoctor::Extensions.register do
@@ -18,9 +18,9 @@ class CatalogTest < Minitest::Test
     doc = Asciidoctor.load adoc, safe: :safe, logger: false, catalog_assets: true
 
     assert doc.catalog.has_key? :include_files
-    assert_equal doc.catalog[:include_files][0], { :target => 'file_1.adoc', :offset => 0 }
-    assert_equal doc.catalog[:include_files][1], { :target => 'file_2.adoc', :offset => 1 }
-    assert_equal doc.catalog[:include_files][2], { :target => 'file_3.adoc', :offset => 2 }
+    assert_equal doc.catalog[:include_files][0], { :target => 'file_1.adoc', :offset => 0, :chunk => nil,          :toc => nil }
+    assert_equal doc.catalog[:include_files][1], { :target => 'file_2.adoc', :offset => 1, :chunk => 'to-content', :toc => nil }
+    assert_equal doc.catalog[:include_files][2], { :target => 'file_3.adoc', :offset => 2, :chunk => nil,          :toc => 'no' }
   end
 
   def test_catalog_empty
