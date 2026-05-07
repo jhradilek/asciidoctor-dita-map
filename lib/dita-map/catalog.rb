@@ -30,11 +30,15 @@ class CatalogIncludeDirectives < Asciidoctor::Extensions::IncludeProcessor
 
   def process doc, reader, target, attributes
     offset = attributes['leveloffset'].to_i
+    chunk  = attributes['chunk'] or nil
+    toc    = attributes['toc'] or nil
 
     doc.catalog[:include_files] = [] unless doc.catalog[:include_files]
     doc.catalog[:include_files].append({
       :target => target,
-      :offset => offset
+      :offset => offset,
+      :chunk  => chunk,
+      :toc    => toc
     })
 
     reader
