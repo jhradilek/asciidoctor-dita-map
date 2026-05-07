@@ -722,4 +722,46 @@ class CliTest < Minitest::Test
       end
     end
   end
+
+  def test_convert_map_chunking
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    incl = [
+      { :target => 'file-1.adoc', :offset => 1, :chunk => 'to-content' },
+      { :target => 'file-2.adoc', :offset => 2 },
+      { :target => 'file-3.adoc', :offset => 1 }
+    ]
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [incl, {}] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+            xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+            assert_xpath_equal xml, 'to-content',  '/map/topicref[1]/@chunk'
+            assert_xpath_count xml, 0, '/map/topicref[1]/topicref[1]/@chunk'
+            assert_xpath_count xml, 0, '/map/topicref[2]/@chunk'
+        end
+      end
+    end
+  end
+
+  def test_convert_map_toc
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    incl = [
+      { :target => 'file-1.adoc', :offset => 1 },
+      { :target => 'file-2.adoc', :offset => 2, :toc => 'no' },
+      { :target => 'file-3.adoc', :offset => 1 }
+    ]
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [incl, {}] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+            xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+            assert_xpath_equal xml, 'no',  '/map/topicref[1]/topicref[1]/@toc'
+            assert_xpath_count xml, 0, '/map/topicref[1]/@toc'
+            assert_xpath_count xml, 0, '/map/topicref[2]/@toc'
+        end
+      end
+    end
+  end
 end

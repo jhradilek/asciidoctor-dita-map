@@ -124,19 +124,22 @@ module AsciidoctorDitaMap
     end
 
     def compose_mapref_attributes file_info, type
-      target_file        = file_info[:target].sub(/\.adoc$/, '.ditamap')
-      attributes         = { 'href' => target_file, 'format' => 'ditamap' }
-      attributes['type'] = type if @opts[:type]
+      target_file         = file_info[:target].sub(/\.adoc$/, '.ditamap')
+      attributes          = { 'href' => target_file, 'format' => 'ditamap' }
+      attributes['type']  = type if @opts[:type]
+      attributes['chunk'] = file_info[:chunk] if file_info[:chunk]
+      attributes['toc']   = file_info[:toc] if file_info[:toc]
 
       return attributes
     end
 
     def compose_topicref_attributes file_info, title, type
       target_file            = file_info[:target].sub(/\.adoc$/, '.dita')
-
       attributes             = { 'href' => target_file }
       attributes['navtitle'] = title if @opts[:navtitle] and title
       attributes['type']     = type if @opts[:type] and type and ['concept', 'reference', 'task'].include? type
+      attributes['chunk']    = file_info[:chunk] if file_info[:chunk]
+      attributes['toc']      = file_info[:toc] if file_info[:toc]
 
       return attributes
     end
