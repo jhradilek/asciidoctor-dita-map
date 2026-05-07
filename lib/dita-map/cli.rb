@@ -123,16 +123,16 @@ module AsciidoctorDitaMap
       return args
     end
 
-    def compose_mapref_attributes file_name, type
-      target_file        = file_name.sub(/\.adoc$/, '.ditamap')
+    def compose_mapref_attributes file_info, type
+      target_file        = file_info[:target].sub(/\.adoc$/, '.ditamap')
       attributes         = { 'href' => target_file, 'format' => 'ditamap' }
       attributes['type'] = type if @opts[:type]
 
       return attributes
     end
 
-    def compose_topicref_attributes file_name, title, type
-      target_file            = file_name.sub(/\.adoc$/, '.dita')
+    def compose_topicref_attributes file_info, title, type
+      target_file            = file_info[:target].sub(/\.adoc$/, '.dita')
 
       attributes             = { 'href' => target_file }
       attributes['navtitle'] = title if @opts[:navtitle] and title
@@ -210,16 +210,16 @@ module AsciidoctorDitaMap
       end
 
       if @opts[:self] and file
-        attributes = compose_topicref_attributes file, map[:title], map[:type]
+        attributes = compose_topicref_attributes({ :target => file }, map[:title], map[:type])
         xml_self   = xml_root.add_element('topicref', attributes)
         stack      = [{ :offset => 0, :element => xml_self }]
       else
         stack      = [{ :offset => 0, :element => xml_root }]
       end
 
-      include_files.each do |file|
-        target      = file[:target]
-        offset      = file[:offset]
+      include_files.each do |file_info|
+        target      = file_info[:target]
+        offset      = file_info[:offset]
         last_offset = stack.last[:offset]
         full_path   = base_dir + target
 
@@ -250,10 +250,10 @@ module AsciidoctorDitaMap
         xml_parent = stack.last[:element]
 
         if include_type == 'map'
-          attributes  = compose_mapref_attributes target, include_type
+          attributes  = compose_mapref_attributes file_info, include_type
           xml_element = xml_parent.add_element('mapref', attributes)
         else
-          attributes  = compose_topicref_attributes target, include_title, include_type
+          attributes  = compose_topicref_attributes file_info, include_title, include_type
           xml_element = xml_parent.add_element('topicref', attributes)
         end
 
