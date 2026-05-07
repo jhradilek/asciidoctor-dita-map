@@ -33,10 +33,12 @@ module AsciidoctorDitaMap
     def initialize name, argv
       @attr = []
       @opts = {
+        :chunk => true,
         :id => true,
         :navtitle => true,
         :output => false,
         :title => true,
+        :toc => true,
         :type => true,
         :self => false,
         :verbose => false
@@ -82,8 +84,16 @@ module AsciidoctorDitaMap
           @opts[:title] = false
         end
 
+        opt.on('-C', '--no-chunk', 'do not generate the chunk attribute') do
+          @opts[:chunk] = false
+        end
+
         opt.on('-N', '--no-navtitle', 'do not generate the navtitle attribute') do
           @opts[:navtitle] = false
+        end
+
+        opt.on('-O', '--no-toc', 'do not generate the toc attribute') do
+          @opts[:toc] = false
         end
 
         opt.on('-T', '--no-type', 'do not generate the type attribute') do
@@ -127,8 +137,8 @@ module AsciidoctorDitaMap
       target_file         = file_info[:target].sub(/\.adoc$/, '.ditamap')
       attributes          = { 'href' => target_file, 'format' => 'ditamap' }
       attributes['type']  = type if @opts[:type]
-      attributes['chunk'] = file_info[:chunk] if file_info[:chunk]
-      attributes['toc']   = file_info[:toc] if file_info[:toc]
+      attributes['chunk'] = file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
+      attributes['toc']   = file_info[:toc] if @opts[:toc] and file_info[:toc]
 
       return attributes
     end
@@ -138,8 +148,8 @@ module AsciidoctorDitaMap
       attributes             = { 'href' => target_file }
       attributes['navtitle'] = title if @opts[:navtitle] and title
       attributes['type']     = type if @opts[:type] and type and ['concept', 'reference', 'task'].include? type
-      attributes['chunk']    = file_info[:chunk] if file_info[:chunk]
-      attributes['toc']      = file_info[:toc] if file_info[:toc]
+      attributes['chunk']    = file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
+      attributes['toc']      = file_info[:toc] if @opts[:toc] and file_info[:toc]
 
       return attributes
     end

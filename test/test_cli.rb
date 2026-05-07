@@ -14,9 +14,11 @@ class CliTest < Minitest::Test
     assert_equal false, opts[:output]
     assert_equal false, opts[:self]
     assert_equal false, opts[:verbose]
+    assert_equal true, opts[:chunk]
     assert_equal true, opts[:id]
     assert_equal true, opts[:navtitle]
     assert_equal true, opts[:title]
+    assert_equal true, opts[:toc]
     assert_equal true, opts[:type]
     assert_equal [], attr
     assert_equal [], prep
@@ -267,6 +269,34 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_no_chunk_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-C']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:chunk]
+  end
+
+  def test_no_chunk_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-chunk']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:chunk]
+  end
+
+  def test_no_chunk_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-chunk']
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1, :chunk => 'to-content' }], {}] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 0, '//topicref/@chunk'
+        end
+      end
+    end
+  end
+
   def test_no_navtitle_short
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-N']
     opts = cli.instance_variable_get :@opts
@@ -290,6 +320,34 @@ class CliTest < Minitest::Test
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 0, '//topicref/@navtitle'
+        end
+      end
+    end
+  end
+
+  def test_no_toc_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-O']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:toc]
+  end
+
+  def test_no_toc_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-toc']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:toc]
+  end
+
+  def test_no_toc_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-toc']
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1, :toc => 'no' }], {}] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 0, '//topicref/@toc'
         end
       end
     end
