@@ -41,7 +41,8 @@ module AsciidoctorDitaMap
         :toc => true,
         :type => true,
         :self => false,
-        :verbose => false
+        :verbose => false,
+        :zero_offset => false
       }
       @prep = []
       @name = name
@@ -101,6 +102,10 @@ module AsciidoctorDitaMap
         end
 
         opt.separator ''
+
+        opt.on('-z', '--zero-offset', 'allow include directives with zero leveloffset') do
+          @opts[:zero_offset] = true
+        end
 
         opt.on('-v', '--verbose', 'report additional problems in the supplied files') do
           @opts[:verbose] = true
@@ -249,14 +254,18 @@ module AsciidoctorDitaMap
         end
 
         if offset == 0
-          warn "#{@name}: warning: invalid leveloffset - expected 1, got 0: #{target}"
-          offset = 1
+          if @opts[:zero_offset]
+            offset = 0
+          else
+            warn "#{@name}: warning: invalid leveloffset - expected 1, got 0: #{target}"
+            offset = 1
+          end
         elsif offset > last_offset and offset - last_offset > 1
           expected_offset = last_offset + 1
           warn "#{@name}: warning: invalid leveloffset - expected #{expected_offset}, got #{offset}: #{target}"
         end
 
-        while stack.last[:offset] >= offset
+        while stack.length > 1 and stack.last[:offset] >= offset
           stack.pop
         end
 
