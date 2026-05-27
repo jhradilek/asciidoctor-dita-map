@@ -103,12 +103,12 @@ module AsciidoctorDitaMap
 
         opt.separator ''
 
-        opt.on('-z', '--zero-offset', 'allow include directives with zero leveloffset') do
-          @opts[:zero_offset] = true
-        end
-
         opt.on('-v', '--verbose', 'report additional problems in the supplied files') do
           @opts[:verbose] = true
+        end
+
+        opt.on('-z', '--zero-offset', 'allow include directives with zero leveloffset') do
+          @opts[:zero_offset] = true
         end
 
         opt.separator ''

@@ -382,6 +382,33 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_verbose_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-v']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal true, opts[:verbose]
+  end
+
+  def test_verbose_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--verbose']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal true, opts[:verbose]
+  end
+
+  def test_verbose_warning
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--verbose']
+    file = 'file.adoc'
+
+    cli.stub :parse_map, [[{ :target => file, :offset => 1 }], {}] do
+      File.stub :exist?, false do
+        assert_output(nil, /file not found: #{file}/) do
+          cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+        end
+      end
+    end
+  end
+
   def test_zero_offset_short
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-z']
     opts = cli.instance_variable_get :@opts
@@ -414,33 +441,6 @@ class CliTest < Minitest::Test
             assert_xpath_equal xml, 'file-2.dita', '/map/topicref[1]/topicref/@href'
             assert_xpath_equal xml, 'file-3.dita', '/map/topicref[2]/@href'
           end
-        end
-      end
-    end
-  end
-
-  def test_verbose_short
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-v']
-    opts = cli.instance_variable_get :@opts
-
-    assert_equal true, opts[:verbose]
-  end
-
-  def test_verbose_long
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--verbose']
-    opts = cli.instance_variable_get :@opts
-
-    assert_equal true, opts[:verbose]
-  end
-
-  def test_verbose_warning
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--verbose']
-    file = 'file.adoc'
-
-    cli.stub :parse_map, [[{ :target => file, :offset => 1 }], {}] do
-      File.stub :exist?, false do
-        assert_output(nil, /file not found: #{file}/) do
-          cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
         end
       end
     end
