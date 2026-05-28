@@ -35,6 +35,7 @@ module AsciidoctorDitaMap
       @opts = {
         :chunk => true,
         :id => true,
+        :locktitle => true,
         :navtitle => true,
         :output => false,
         :title => true,
@@ -87,6 +88,10 @@ module AsciidoctorDitaMap
 
         opt.on('-C', '--no-chunk', 'do not generate the chunk attribute') do
           @opts[:chunk] = false
+        end
+
+        opt.on('-L', '--no-locktitle', 'do not generate the locktitle attribute') do
+          @opts[:locktitle] = false
         end
 
         opt.on('-N', '--no-navtitle', 'do not generate the navtitle attribute') do
@@ -149,12 +154,13 @@ module AsciidoctorDitaMap
     end
 
     def compose_topicref_attributes file_info, title, type
-      target_file            = file_info[:target].sub(/\.adoc$/, '.dita')
-      attributes             = { 'href' => target_file }
-      attributes['navtitle'] = title if @opts[:navtitle] and title
-      attributes['type']     = type if @opts[:type] and type and ['concept', 'reference', 'task'].include? type
-      attributes['chunk']    = file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
-      attributes['toc']      = file_info[:toc] if @opts[:toc] and file_info[:toc]
+      target_file             = file_info[:target].sub(/\.adoc$/, '.dita')
+      attributes              = { 'href' => target_file }
+      attributes['navtitle']  = title if @opts[:navtitle] and title
+      attributes['locktitle'] = 'yes' if @opts[:locktitle] and attributes['navtitle']
+      attributes['type']      = type if @opts[:type] and type and ['concept', 'reference', 'task'].include? type
+      attributes['chunk']     = file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
+      attributes['toc']       = file_info[:toc] if @opts[:toc] and file_info[:toc]
 
       return attributes
     end
