@@ -17,6 +17,7 @@ class CliTest < Minitest::Test
     assert_equal false, opts[:zero_offset]
     assert_equal true, opts[:chunk]
     assert_equal true, opts[:id]
+    assert_equal true, opts[:locktitle]
     assert_equal true, opts[:navtitle]
     assert_equal true, opts[:title]
     assert_equal true, opts[:toc]
@@ -293,6 +294,35 @@ class CliTest < Minitest::Test
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 0, '//topicref/@chunk'
+        end
+      end
+    end
+  end
+
+  def test_no_locktitle_short
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['-L']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:locktitle]
+  end
+
+  def test_no_locktitle_long
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-locktitle']
+    opts = cli.instance_variable_get :@opts
+
+    assert_equal false, opts[:locktitle]
+  end
+
+  def test_no_locktitle_output
+    cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-locktitle']
+
+    File.stub :read, 'topic contents' do
+      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
+        cli.stub :parse_topic, ['A topic title', 'concept'] do
+          xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 1, '//topicref/@navtitle'
+          assert_xpath_count xml, 0, '//topicref/@locktitle'
         end
       end
     end
@@ -728,6 +758,7 @@ class CliTest < Minitest::Test
           assert_xpath_count xml, 0, '//mapref'
           assert_xpath_equal xml, 'file.dita', '/map/topicref/@href'
           assert_xpath_equal xml, 'A topic title', '/map/topicref/@navtitle'
+          assert_xpath_equal xml, 'yes', '/map/topicref/@locktitle'
           assert_xpath_equal xml, 'concept', '/map/topicref/@type'
         end
       end
