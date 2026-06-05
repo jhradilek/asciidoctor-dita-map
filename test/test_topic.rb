@@ -16,6 +16,19 @@ class TopicTest < Minitest::Test
     assert_equal 'concept', topic.type
   end
 
+  def test_topic_with_attributes
+    adoc  = <<~EOF.chomp
+    :_mod-docs-content-type: CONCEPT
+
+    = A {module} title
+    EOF
+
+    topic = AsciidoctorDitaMap::Topic.new adoc, ['module=topic']
+
+    assert_equal 'A topic title', topic.title
+    assert_equal 'concept', topic.type
+  end
+
   def test_topic_no_input
     adoc  = ''
 

@@ -22,40 +22,31 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 require 'asciidoctor'
+require_relative 'catalog'
+require_relative 'topic'
 
 module AsciidoctorDitaMap
-  class Topic
-    attr_reader :title, :type
+  class Map < Topic
+    attr_reader :id, :includes
 
-    def initialize input, attributes = []
+    def initialize input, base_dir, attributes = []
       if input.empty?
-        @title = nil
-        @type  = nil
+        @id       = nil
+        @title    = nil
+        @type     = nil
+        @includes = []
       else
-        doc = Asciidoctor.load input, safe: :secure, attributes: attributes
+        Asciidoctor::Extensions.register do
+          include_processor CatalogIncludeDirectives
+        end
 
-        @title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-        @type  = get_content_type doc.attributes
+        doc = Asciidoctor.load input, safe: :safe, catalog_assets: true, attributes: attributes, base_dir: base_dir
+
+        @includes = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
+        @id       = doc.id ? doc.id.gsub(/["']/, '') : nil
+        @title    = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
+        @type     = get_content_type doc.attributes
       end
-    end
-
-    private
-
-    def get_content_type attributes
-      type = attributes['_mod-docs-content-type'] ? attributes['_mod-docs-content-type'].downcase : nil
-      type = attributes['_content-type'] ? attributes['_content-type'].downcase : nil unless type
-      type = attributes['_module-type'] ? attributes['_module-type'].downcase : nil unless type
-
-      if type
-        type.sub!(/^assembly$/, 'concept')
-        type.sub!(/^procedure$/, 'task')
-      end
-
-      unless ['concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? type
-        return nil
-      end
-
-      return type
     end
   end
 end

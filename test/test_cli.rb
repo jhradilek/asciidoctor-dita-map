@@ -213,8 +213,9 @@ class CliTest < Minitest::Test
 
   def test_include_self_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--include-self']
+    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept', :id => nil, :includes => [])
 
-    cli.stub :parse_map, [[], { :type => 'concept', :title => 'A topic title' }] do
+    AsciidoctorDitaMap::Map.stub :new, mock do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path, '', 'file.adoc'
 
       assert_xpath_count xml, 1, '/map/topicref'
@@ -240,8 +241,9 @@ class CliTest < Minitest::Test
 
   def test_no_id_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-id']
+    mock = OpenStruct.new(:title => nil, :type => nil, :id => 'map-id', :includes => [])
 
-    cli.stub :parse_map, [[], { :id => 'map-id' }] do
+    AsciidoctorDitaMap::Map.stub :new, mock do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/@id'
@@ -264,8 +266,9 @@ class CliTest < Minitest::Test
 
   def test_no_maptitle_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-maptitle']
+    mock = OpenStruct.new(:title => 'A map title', :type => nil, :id => nil, :includes => [])
 
-    cli.stub :parse_map, [[], { :title => 'A map title' }] do
+    AsciidoctorDitaMap::Map.stub :new, mock do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/title'
@@ -288,11 +291,15 @@ class CliTest < Minitest::Test
 
   def test_no_chunk_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-chunk']
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
+    incl = [
+      { :target => 'file.adoc', :offset => 1, :chunk => 'to-content' }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1, :chunk => 'to-content' }], {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 0, '//topicref/@chunk'
@@ -317,11 +324,15 @@ class CliTest < Minitest::Test
 
   def test_no_locktitle_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-locktitle']
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 1, '//topicref/@navtitle'
@@ -347,11 +358,15 @@ class CliTest < Minitest::Test
 
   def test_no_navtitle_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-navtitle']
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 0, '//topicref/@navtitle'
@@ -376,11 +391,15 @@ class CliTest < Minitest::Test
 
   def test_no_toc_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-toc']
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
+    incl = [
+      { :target => 'file.adoc', :offset => 1, :toc => 'no' }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1, :toc => 'no' }], {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 0, '//topicref/@toc'
@@ -405,11 +424,15 @@ class CliTest < Minitest::Test
 
   def test_no_type_output
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--no-type']
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 0, '//topicref/@type'
@@ -435,8 +458,12 @@ class CliTest < Minitest::Test
   def test_verbose_warning
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--verbose']
     file = 'file.adoc'
+    incl = [
+      { :target => file, :offset => 1 }
+    ]
+    mock = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
 
-    cli.stub :parse_map, [[{ :target => file, :offset => 1 }], {}] do
+    AsciidoctorDitaMap::Map.stub :new, mock do
       File.stub :exist?, false do
         assert_output(nil, /file not found: #{file}/) do
           cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
@@ -461,16 +488,17 @@ class CliTest < Minitest::Test
 
   def test_zero_offset_no_warning
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', ['--zero-offset']
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
     incl = [
       { :target => 'file-1.adoc', :offset => 0 },
       { :target => 'file-2.adoc', :offset => 1 },
       { :target => 'file-3.adoc', :offset => 0 }
     ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [incl, {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           assert_output(nil, '') do
             xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -523,65 +551,11 @@ class CliTest < Minitest::Test
     end
   end
 
-  def test_parse_map_structure
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    adoc = <<~EOF.chomp
-    [id="map-id"]
-    = A map title
-
-    include::file-1.adoc[leveloffset=+1]
-    include::file-2.adoc[leveloffset=+2]
-    EOF
-
-    include_files, map = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
-
-    assert_equal 'map-id', map[:id]
-    assert_equal 'A map title', map[:title]
-    assert_equal include_files[0][:target], 'file-1.adoc'
-    assert_equal include_files[0][:offset], 1
-    assert_equal include_files[1][:target], 'file-2.adoc'
-    assert_equal include_files[1][:offset], 2
-  end
-
-  def test_parse_map_no_includes
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    adoc = <<~EOF.chomp
-    [id="map-id"]
-    = A map title
-    EOF
-
-    include_files, _ = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
-
-    assert_empty include_files
-  end
-
-  def test_parse_map_no_id
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    adoc = <<~EOF.chomp
-    = A map title
-    EOF
-
-    _, map = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
-
-    assert_nil map[:id]
-  end
-
-  def test_parse_map_no_title
-    cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    adoc = <<~EOF.chomp
-    include::file-1.adoc[leveloffset=+1]
-    include::file-2.adoc[leveloffset=+2]
-    EOF
-
-    _, map = cli.parse_map adoc, Pathname.new(Dir.pwd).expand_path
-
-    assert_nil map[:title]
-  end
-
   def test_convert_map_id
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    mock = OpenStruct.new(:title => 'A map title', :type => nil, :id => 'map-id', :includes => [])
 
-    cli.stub :parse_map, [[], { :title => 'A map title', :id => 'map-id' }] do
+    AsciidoctorDitaMap::Map.stub :new, mock do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_equal xml, 'map-id', '/map/@id'
@@ -590,8 +564,9 @@ class CliTest < Minitest::Test
 
   def test_convert_map_no_id
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    mock = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => [])
 
-    cli.stub :parse_map, [[], { :title => 'A map title', :id => nil }] do
+    AsciidoctorDitaMap::Map.stub :new, mock do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/@id'
@@ -600,8 +575,9 @@ class CliTest < Minitest::Test
 
   def test_convert_map_title
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    mock = OpenStruct.new(:title => 'A map title', :type => nil, :id => nil, :includes => [])
 
-    cli.stub :parse_map, [[], { :title => 'A map title' }] do
+    AsciidoctorDitaMap::Map.stub :new, mock do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_equal xml, 'A map title', '/map/title/text()'
@@ -610,8 +586,9 @@ class CliTest < Minitest::Test
 
   def test_convert_map_no_title
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
+    mock = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => [])
 
-    cli.stub :parse_map, [[], { :title => nil }] do
+    AsciidoctorDitaMap::Map.stub :new, mock do
       xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
       assert_xpath_count xml, 0, '/map/title'
@@ -620,11 +597,15 @@ class CliTest < Minitest::Test
 
   def test_convert_map_topicref
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 1, '//topicref'
@@ -640,11 +621,15 @@ class CliTest < Minitest::Test
 
   def test_convert_map_mapref
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    mock = OpenStruct.new(:title => 'A map title', :type => 'map')
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A map title', :type => 'map')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 1, '//mapref'
@@ -659,11 +644,15 @@ class CliTest < Minitest::Test
 
   def test_convert_map_attributes
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    mock = OpenStruct.new(:title => nil, :type => 'attributes')
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => nil, :type => 'attributes')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [[{ :target => 'file.adoc', :offset => 1 }], {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_count xml, 0, '//mapref'
@@ -675,7 +664,6 @@ class CliTest < Minitest::Test
 
   def test_convert_map_nesting
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
     incl = [
       { :target => 'file-1.adoc', :offset => 1 },
       { :target => 'file-2.adoc', :offset => 2 },
@@ -683,10 +671,12 @@ class CliTest < Minitest::Test
       { :target => 'file-4.adoc', :offset => 2 },
       { :target => 'file-5.adoc', :offset => 1 }
     ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [incl, {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_equal xml, 'file-1.dita', '/map/topicref[1]/@href'
@@ -701,7 +691,6 @@ class CliTest < Minitest::Test
 
   def test_convert_map_invalid_leveloffset
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
     incl = [
       { :target => 'file-1.adoc', :offset => 3 },
       { :target => 'file-2.adoc', :offset => 4 },
@@ -709,10 +698,12 @@ class CliTest < Minitest::Test
       { :target => 'file-4.adoc', :offset => 4 },
       { :target => 'file-5.adoc', :offset => 2 }
     ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [incl, {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           assert_output(nil, /invalid leveloffset/) do
             xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -729,15 +720,16 @@ class CliTest < Minitest::Test
 
   def test_convert_map_zero_offset
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
     incl = [
       { :target => 'file-1.adoc', :offset => 0 },
       { :target => 'file-2.adoc', :offset => 1 }
     ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [incl, {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           assert_output(nil, /invalid leveloffset/) do
             xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
@@ -751,16 +743,17 @@ class CliTest < Minitest::Test
 
   def test_convert_map_chunking
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
     incl = [
       { :target => 'file-1.adoc', :offset => 1, :chunk => 'to-content' },
       { :target => 'file-2.adoc', :offset => 2 },
       { :target => 'file-3.adoc', :offset => 1 }
     ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [incl, {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_equal xml, 'to-content',  '/map/topicref[1]/@chunk'
@@ -773,16 +766,17 @@ class CliTest < Minitest::Test
 
   def test_convert_map_toc
     cli  = AsciidoctorDitaMap::Cli.new 'script-name', []
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept')
     incl = [
       { :target => 'file-1.adoc', :offset => 1 },
       { :target => 'file-2.adoc', :offset => 2, :toc => 'no' },
       { :target => 'file-3.adoc', :offset => 1 }
     ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
 
     File.stub :read, 'topic contents' do
-      cli.stub :parse_map, [incl, {}] do
-        AsciidoctorDitaMap::Topic.stub :new, mock do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = cli.convert_map 'map contents', Pathname.new(Dir.pwd).expand_path
 
           assert_xpath_equal xml, 'no',  '/map/topicref[1]/topicref[1]/@toc'
