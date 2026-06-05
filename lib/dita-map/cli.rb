@@ -26,6 +26,7 @@ require 'pathname'
 require 'asciidoctor'
 require 'rexml/document'
 require_relative 'catalog'
+require_relative 'topic'
 require_relative 'version'
 
 module AsciidoctorDitaMap
@@ -166,29 +167,20 @@ module AsciidoctorDitaMap
     end
 
     def get_content_type attributes
-      document_type  = attributes['_mod-docs-content-type'] ? attributes['_mod-docs-content-type'].downcase : nil
-      document_type  = attributes['_content-type'] ? attributes['_content-type'].downcase : nil unless document_type
-      document_type  = attributes['_module-type'] ? attributes['_module-type'].downcase : nil unless document_type
+      type = attributes['_mod-docs-content-type'] ? attributes['_mod-docs-content-type'].downcase : nil
+      type = attributes['_content-type'] ? attributes['_content-type'].downcase : nil unless type
+      type = attributes['_module-type'] ? attributes['_module-type'].downcase : nil unless type
 
-      if document_type
-        document_type.sub!(/^assembly$/, 'concept')
-        document_type.sub!(/^procedure$/, 'task')
+      if type
+        type.sub!(/^assembly$/, 'concept')
+        type.sub!(/^procedure$/, 'task')
       end
 
-      unless ['concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? document_type
+      unless ['concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? type
         return nil
       end
 
-      return document_type
-    end
-
-    def parse_topic input
-      doc = Asciidoctor.load input, safe: :secure, attributes: @attr
-
-      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-      document_type  = get_content_type doc.attributes
-
-      return document_title, document_type
+      return type
     end
 
     def parse_map input, base_dir
@@ -252,11 +244,11 @@ module AsciidoctorDitaMap
         end
 
         begin
-          include_title, include_type = parse_topic prepended + File.read(full_path)
-          next if ['attributes', 'snippet'].include? include_type
+          topic = Topic.new prepended + File.read(full_path)
+          next if ['attributes', 'snippet'].include? topic.type
         rescue
           warn "#{@name}: warning: unable to read included file: #{target}"
-          include_title, include_type = nil, nil
+          topic = Topic.new ''
         end
 
         if offset == 0
@@ -277,11 +269,11 @@ module AsciidoctorDitaMap
 
         xml_parent = stack.last[:element]
 
-        if include_type == 'map'
-          attributes  = compose_mapref_attributes file_info, include_type
+        if topic.type == 'map'
+          attributes  = compose_mapref_attributes file_info, topic.type
           xml_element = xml_parent.add_element('mapref', attributes)
         else
-          attributes  = compose_topicref_attributes file_info, include_title, include_type
+          attributes  = compose_topicref_attributes file_info, topic.title, topic.type
           xml_element = xml_parent.add_element('topicref', attributes)
         end
 
