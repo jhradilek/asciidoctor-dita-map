@@ -23,9 +23,9 @@
 
 require 'optparse'
 require 'pathname'
-require 'asciidoctor'
 require 'rexml/document'
-require_relative 'catalog'
+require_relative 'topic'
+require_relative 'map'
 require_relative 'version'
 
 module AsciidoctorDitaMap
@@ -165,83 +165,36 @@ module AsciidoctorDitaMap
       return attributes
     end
 
-    def get_content_type attributes
-      document_type  = attributes['_mod-docs-content-type'] ? attributes['_mod-docs-content-type'].downcase : nil
-      document_type  = attributes['_content-type'] ? attributes['_content-type'].downcase : nil unless document_type
-      document_type  = attributes['_module-type'] ? attributes['_module-type'].downcase : nil unless document_type
-
-      if document_type
-        document_type.sub!(/^assembly$/, 'concept')
-        document_type.sub!(/^procedure$/, 'task')
-      end
-
-      unless ['concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? document_type
-        return nil
-      end
-
-      return document_type
-    end
-
-    def parse_topic input
-      doc = Asciidoctor.load input, safe: :secure, attributes: @attr
-
-      document_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-      document_type  = get_content_type doc.attributes
-
-      return document_title, document_type
-    end
-
-    def parse_map input, base_dir
-      Asciidoctor::Extensions.register do
-        include_processor CatalogIncludeDirectives
-      end
-
-      doc = Asciidoctor.load input, safe: :safe, catalog_assets: true, attributes: @attr, base_dir: base_dir
-
-      include_files  = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
-      map_id    = doc.id ? doc.id.gsub(/["']/, '') : nil
-      map_title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-      map_type  = get_content_type doc.attributes
-
-      info = {
-        :id    => map_id,
-        :title => map_title,
-        :type  => map_type
-      }
-
-      return include_files, info
-    end
-
     def convert_map input, base_dir, prepended = '', file = nil
       result = ''
 
-      include_files, map = parse_map prepended + input, base_dir
+      map = Map.new prepended + input, base_dir, @attr
 
       xml = REXML::Document.new
       xml.context[:attribute_quote] = :quote
       xml << REXML::XMLDecl.new('1.0', 'utf-8')
       xml << REXML::DocType.new('map', 'PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd"')
 
-      if map[:id] and @opts[:id]
-        xml_root  = xml.add_element('map', { 'id' => map[:id] })
+      if map.id and @opts[:id]
+        xml_root  = xml.add_element('map', { 'id' => map.id })
       else
         xml_root  = xml.add_element('map')
       end
 
-      if map[:title] and @opts[:title]
+      if map.title and @opts[:title]
         xml_title      = xml_root.add_element('title')
-        xml_title.text = map[:title]
+        xml_title.text = map.title
       end
 
       if @opts[:self] and file
-        attributes = compose_topicref_attributes({ :target => file }, map[:title], map[:type])
+        attributes = compose_topicref_attributes({ :target => file }, map.title, map.type)
         xml_self   = xml_root.add_element('topicref', attributes)
         stack      = [{ :offset => 0, :element => xml_self }]
       else
         stack      = [{ :offset => 0, :element => xml_root }]
       end
 
-      include_files.each do |file_info|
+      map.includes.each do |file_info|
         target      = file_info[:target]
         offset      = file_info[:offset]
         last_offset = stack.last[:offset]
@@ -252,11 +205,11 @@ module AsciidoctorDitaMap
         end
 
         begin
-          include_title, include_type = parse_topic prepended + File.read(full_path)
-          next if ['attributes', 'snippet'].include? include_type
+          topic = Topic.new prepended + File.read(full_path), @attr
+          next if ['attributes', 'snippet'].include? topic.type
         rescue
           warn "#{@name}: warning: unable to read included file: #{target}"
-          include_title, include_type = nil, nil
+          topic = Topic.new ''
         end
 
         if offset == 0
@@ -277,11 +230,11 @@ module AsciidoctorDitaMap
 
         xml_parent = stack.last[:element]
 
-        if include_type == 'map'
-          attributes  = compose_mapref_attributes file_info, include_type
+        if topic.type == 'map'
+          attributes  = compose_mapref_attributes file_info, topic.type
           xml_element = xml_parent.add_element('mapref', attributes)
         else
-          attributes  = compose_topicref_attributes file_info, include_title, include_type
+          attributes  = compose_topicref_attributes file_info, topic.title, topic.type
           xml_element = xml_parent.add_element('topicref', attributes)
         end
 
