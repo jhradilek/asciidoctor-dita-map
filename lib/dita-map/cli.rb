@@ -29,7 +29,7 @@ require_relative 'version'
 module AsciidoctorDitaMap
   class Cli
     def initialize argv
-      @output    = false
+      @output    = nil
       @converter = Convert.new
       @args      = self.parse_args argv
     end
