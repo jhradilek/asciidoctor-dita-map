@@ -24,5 +24,6 @@
 # frozen_string_literal: true
 
 module AsciidoctorDitaMap
+  NAME        = 'dita-map'
   VERSION     = '0.9.4'
 end

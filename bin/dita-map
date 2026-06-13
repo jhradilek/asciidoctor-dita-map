@@ -26,11 +26,10 @@
 require (cli = File.absolute_path '../lib/dita-map/cli.rb', __dir__) ? cli : 'dita-map/cli'
 
 begin
-  name = File.basename($0)
-  converter = AsciidoctorDitaMap::Cli.new name, ARGV
+  converter = AsciidoctorDitaMap::Cli.new ARGV
   converter.run
 rescue OptionParser::InvalidArgument, OptionParser::InvalidOption, OptionParser::MissingArgument => error
-  abort "#{name}: #{error.message}"
+  abort "#{AsciidoctorDitaMap::NAME}: #{error.message}"
 rescue Interrupt
   exit 130
 end

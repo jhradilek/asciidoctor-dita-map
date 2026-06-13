@@ -13,6 +13,9 @@ Gem::Specification.new do |s|
   s.files       = [
     'lib/dita-map/catalog.rb',
     'lib/dita-map/cli.rb',
+    'lib/dita-map/convert.rb',
+    'lib/dita-map/map.rb',
+    'lib/dita-map/topic.rb',
     'lib/dita-map/version.rb',
     'LICENSE',
     'AUTHORS',
