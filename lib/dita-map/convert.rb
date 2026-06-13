@@ -46,26 +46,25 @@ module AsciidoctorDitaMap
       @prep = ''
     end
 
-    def compose_mapref_attributes file_info, type
+    def compose_mapref_attributes element, file_info, type
       target_file         = file_info[:target].sub(/\.adoc$/, '.ditamap')
-      attributes          = { 'href' => target_file, 'format' => 'ditamap' }
-      attributes['type']  = type if @opts[:type]
-      attributes['chunk'] = file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
-      attributes['toc']   = file_info[:toc] if @opts[:toc] and file_info[:toc]
 
-      return attributes
+      element.add_attribute 'href', target_file
+      element.add_attribute 'format', 'ditamap'
+      element.add_attribute 'type', type if @opts[:type]
+      element.add_attribute 'chunk', file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
+      element.add_attribute 'toc', file_info[:toc] if @opts[:toc] and file_info[:toc]
     end
 
-    def compose_topicref_attributes file_info, title, type
+    def compose_topicref_attributes element, file_info, title, type
       target_file             = file_info[:target].sub(/\.adoc$/, '.dita')
-      attributes              = { 'href' => target_file }
-      attributes['navtitle']  = title if @opts[:navtitle] and title
-      attributes['locktitle'] = 'yes' if @opts[:locktitle] and attributes['navtitle']
-      attributes['type']      = type if @opts[:type] and type and ['concept', 'reference', 'task'].include? type
-      attributes['chunk']     = file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
-      attributes['toc']       = file_info[:toc] if @opts[:toc] and file_info[:toc]
 
-      return attributes
+      element.add_attribute 'href', target_file
+      element.add_attribute REXML::Attribute.new('navtitle', title) if @opts[:navtitle] and title
+      element.add_attribute 'locktitle', 'yes' if @opts[:locktitle] and element['navtitle']
+      element.add_attribute 'type', type if @opts[:type] and type and ['concept', 'reference', 'task'].include? type
+      element.add_attribute 'chunk', file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
+      element.add_attribute 'toc', file_info[:toc] if @opts[:toc] and file_info[:toc]
     end
 
     def run input, base_dir, file = nil
@@ -90,8 +89,8 @@ module AsciidoctorDitaMap
       end
 
       if @opts[:self] and file
-        attributes = compose_topicref_attributes({ :target => file }, map.title, map.type)
-        xml_self   = xml_root.add_element('topicref', attributes)
+        xml_self   = xml_root.add_element('topicref')
+        compose_topicref_attributes(xml_self, { :target => file }, map.title, map.type)
         stack      = [{ :offset => 0, :element => xml_self }]
       else
         stack      = [{ :offset => 0, :element => xml_root }]
@@ -134,11 +133,11 @@ module AsciidoctorDitaMap
         xml_parent = stack.last[:element]
 
         if topic.type == 'map'
-          attributes  = compose_mapref_attributes file_info, topic.type
-          xml_element = xml_parent.add_element('mapref', attributes)
+          xml_element = xml_parent.add_element('mapref')
+          compose_mapref_attributes xml_element, file_info, topic.type
         else
-          attributes  = compose_topicref_attributes file_info, topic.title, topic.type
-          xml_element = xml_parent.add_element('topicref', attributes)
+          xml_element = xml_parent.add_element('topicref')
+          compose_topicref_attributes xml_element, file_info, topic.title, topic.type
         end
 
         stack.push ({ :offset => offset, :element => xml_element })
