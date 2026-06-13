@@ -70,6 +70,17 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_run_title_entities
+    conv = AsciidoctorDitaMap::Convert.new
+    mock = OpenStruct.new(:title => 'A&#160;map title', :type => nil, :id => nil, :includes => [])
+
+    AsciidoctorDitaMap::Map.stub :new, mock do
+      xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_equal xml, 'A&#160;map title', '/map/title/text()'
+    end
+  end
+
   def test_run_topicref
     conv = AsciidoctorDitaMap::Convert.new
     incl = [

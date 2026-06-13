@@ -86,7 +86,7 @@ module AsciidoctorDitaMap
 
       if map.title and @opts[:title]
         xml_title      = xml_root.add_element('title')
-        xml_title.text = map.title
+        xml_title.add REXML::Text.new(map.title, false, nil, true)
       end
 
       if @opts[:self] and file
