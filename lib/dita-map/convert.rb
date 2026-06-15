@@ -61,7 +61,13 @@ module AsciidoctorDitaMap
       target_file             = file_info[:target].sub(/\.adoc$/, '.dita')
 
       element.add_attribute 'href', target_file
-      element.add_attribute REXML::Attribute.new('navtitle', title) if @opts[:navtitle] and title
+
+      if file_info[:navtitle]
+        element.add_attribute REXML::Attribute.new('navtitle', file_info[:navtitle]) if @opts[:navtitle]
+      else
+        element.add_attribute REXML::Attribute.new('navtitle', title) if @opts[:navtitle] and title
+      end
+
       element.add_attribute 'locktitle', 'yes' if @opts[:locktitle] and element['navtitle']
       element.add_attribute 'type', type if @opts[:type] and type and ['concept', 'reference', 'task'].include? type
       element.add_attribute 'chunk', file_info[:chunk] if @opts[:chunk] and file_info[:chunk]

@@ -297,10 +297,29 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_run_navtitle
+    conv = AsciidoctorDitaMap::Convert.new
+    incl = [
+      { :target => 'file.adoc', :offset => 1, :navtitle => 'A custom title' }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
+
+    File.stub :read, 'topic contents' do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
+          xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_equal xml, 'A custom title', '/map/topicref/@navtitle'
+        end
+      end
+    end
+  end
+
   def test_run_navtitle_entities
     conv = AsciidoctorDitaMap::Convert.new
     incl = [
-      { :target => 'file-1.adoc', :offset => 1 }
+      { :target => 'file.adoc', :offset => 1 }
     ]
     mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
     mock_topic = OpenStruct.new(:title => 'A&#160;topic title', :type => 'concept')
