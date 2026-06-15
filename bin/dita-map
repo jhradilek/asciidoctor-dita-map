@@ -28,7 +28,8 @@ require (cli = File.absolute_path '../lib/dita-map/cli.rb', __dir__) ? cli : 'di
 begin
   converter = AsciidoctorDitaMap::Cli.new ARGV
   converter.run
-rescue OptionParser::InvalidArgument, OptionParser::InvalidOption, OptionParser::MissingArgument => error
+rescue OptionParser::InvalidArgument, OptionParser::InvalidOption,
+       OptionParser::AmbiguousOption, OptionParser::MissingArgument => error
   abort "#{AsciidoctorDitaMap::NAME}: #{error.message}"
 rescue Interrupt
   exit 130
