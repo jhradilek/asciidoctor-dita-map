@@ -95,7 +95,7 @@ class TopicTest < Minitest::Test
 
     topic = AsciidoctorDitaMap::Topic.new adoc
 
-    assert_equal 'concept', topic.type
+    assert_equal 'assembly', topic.type
   end
 
   def test_topic_procedure
