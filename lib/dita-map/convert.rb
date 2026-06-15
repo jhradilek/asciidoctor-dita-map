@@ -34,6 +34,7 @@ module AsciidoctorDitaMap
       @opts = {
         :chunk => true,
         :id => true,
+        :assembly => true,
         :locktitle => true,
         :navtitle => true,
         :title => true,
@@ -131,6 +132,8 @@ module AsciidoctorDitaMap
         end
 
         xml_parent = stack.last[:element]
+
+        topic.type.sub!(/^assembly$/, 'concept') if not @opts[:assembly]
 
         if topic.type == 'map' or topic.type == 'assembly'
           xml_element = xml_parent.add_element('mapref')

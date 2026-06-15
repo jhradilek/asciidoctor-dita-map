@@ -269,6 +269,42 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_no_assembly_short
+    cli  = AsciidoctorDitaMap::Cli.new ['-A']
+    conv = cli.instance_variable_get :@converter
+
+    assert_equal false, conv.opts[:assembly]
+  end
+
+  def test_no_assembly_long
+    cli  = AsciidoctorDitaMap::Cli.new ['--no-assembly']
+    conv = cli.instance_variable_get :@converter
+
+    assert_equal false, conv.opts[:assembly]
+  end
+
+  def test_no_assembly_output
+    cli  = AsciidoctorDitaMap::Cli.new ['--no-assembly']
+    conv = cli.instance_variable_get :@converter
+    incl = [
+      { :target => 'file.adoc', :offset => 1, :chunk => nil }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'An assembly title', :type => 'assembly')
+
+    File.stub :read, 'topic contents' do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
+          xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 0, '//mapref'
+          assert_xpath_count xml, 1, '//topicref'
+          assert_xpath_equal xml, 'concept', '//topicref/@type'
+        end
+      end
+    end
+  end
+
   def test_no_chunk_short
     cli  = AsciidoctorDitaMap::Cli.new ['-C']
     conv = cli.instance_variable_get :@converter

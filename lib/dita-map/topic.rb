@@ -25,7 +25,7 @@ require 'asciidoctor'
 
 module AsciidoctorDitaMap
   class Topic
-    attr_reader :title, :type
+    attr_accessor :title, :type
 
     def initialize input, attributes = []
       if input.empty?

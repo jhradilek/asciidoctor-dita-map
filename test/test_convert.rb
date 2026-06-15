@@ -15,6 +15,7 @@ class CliTest < Minitest::Test
     assert_equal false, opts[:self]
     assert_equal false, opts[:verbose]
     assert_equal false, opts[:zero_offset]
+    assert_equal true, opts[:assembly]
     assert_equal true, opts[:chunk]
     assert_equal true, opts[:id]
     assert_equal true, opts[:locktitle]
