@@ -15,6 +15,7 @@ class CliTest < Minitest::Test
     assert_equal false, opts[:self]
     assert_equal false, opts[:verbose]
     assert_equal false, opts[:zero_offset]
+    assert_equal true, opts[:assembly]
     assert_equal true, opts[:chunk]
     assert_equal true, opts[:id]
     assert_equal true, opts[:locktitle]
@@ -112,6 +113,29 @@ class CliTest < Minitest::Test
     ]
     mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
     mock_topic = OpenStruct.new(:title => 'A map title', :type => 'map')
+
+    File.stub :read, 'topic contents' do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
+          xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 1, '//mapref'
+          assert_xpath_count xml, 0, '//topicref'
+          assert_xpath_equal xml, 'file.ditamap', '/map/mapref/@href'
+          assert_xpath_equal xml, 'ditamap', '/map/mapref/@format'
+          assert_xpath_equal xml, 'map', '/map/mapref/@type'
+        end
+      end
+    end
+  end
+
+  def test_run_mapref_assembly
+    conv = AsciidoctorDitaMap::Convert.new
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => 'An assembly title', :type => 'assembly')
 
     File.stub :read, 'topic contents' do
       AsciidoctorDitaMap::Map.stub :new, mock_map do

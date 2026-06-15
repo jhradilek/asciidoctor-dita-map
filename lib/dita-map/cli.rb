@@ -71,6 +71,10 @@ module AsciidoctorDitaMap
           @converter.opts[:title] = false
         end
 
+        opt.on('-A', '--no-assembly', 'do treat assemblies as maps') do
+          @converter.opts[:assembly] = false
+        end
+
         opt.on('-C', '--no-chunk', 'do not generate the chunk attribute') do
           @converter.opts[:chunk] = false
         end

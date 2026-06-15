@@ -25,7 +25,7 @@ require 'asciidoctor'
 
 module AsciidoctorDitaMap
   class Topic
-    attr_reader :title, :type
+    attr_accessor :title, :type
 
     def initialize input, attributes = []
       if input.empty?
@@ -47,11 +47,10 @@ module AsciidoctorDitaMap
       type = attributes['_module-type'] ? attributes['_module-type'].downcase : nil unless type
 
       if type
-        type.sub!(/^assembly$/, 'concept')
         type.sub!(/^procedure$/, 'task')
       end
 
-      unless ['concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? type
+      unless ['assembly', 'concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? type
         return nil
       end
 

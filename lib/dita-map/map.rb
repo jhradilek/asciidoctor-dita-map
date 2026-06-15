@@ -27,7 +27,7 @@ require_relative 'topic'
 
 module AsciidoctorDitaMap
   class Map < Topic
-    attr_reader :id, :includes
+    attr_accessor :id, :includes
 
     def initialize input, base_dir, attributes = []
       if input.empty?
