@@ -32,7 +32,7 @@ module AsciidoctorDitaMap
         @title = nil
         @type  = nil
       else
-        doc = Asciidoctor.load input, safe: :secure, attributes: attributes
+        doc = Asciidoctor.load input, safe: :secure, logger: false, attributes: attributes
 
         @title = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
         @type  = get_content_type doc.attributes

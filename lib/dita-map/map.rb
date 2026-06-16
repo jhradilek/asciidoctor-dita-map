@@ -40,7 +40,7 @@ module AsciidoctorDitaMap
           include_processor CatalogIncludeDirectives
         end
 
-        doc = Asciidoctor.load input, safe: :safe, catalog_assets: true, attributes: attributes, base_dir: base_dir
+        doc = Asciidoctor.load input, safe: :safe, logger: false, catalog_assets: true, attributes: attributes, base_dir: base_dir
 
         @includes = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
         @id       = doc.id ? doc.id.gsub(/["']/, '') : nil
