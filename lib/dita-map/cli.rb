@@ -37,7 +37,7 @@ module AsciidoctorDitaMap
     def parse_args argv
       parser = OptionParser.new do |opt|
         opt.banner  = "Usage: #{NAME} [OPTION...] [FILE...]\n"
-        opt.banner += "       #{NAME} -h|-v\n\n"
+        opt.banner += "       #{NAME} -h|-V\n\n"
 
         opt.on('-o', '--out-file FILE', 'specify the output file; by default, the output file name is based on the input file') do |output|
           @output = (output.strip == '-') ? $stdout : output
