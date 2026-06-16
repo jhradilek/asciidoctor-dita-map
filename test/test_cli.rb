@@ -568,6 +568,16 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_help_banner
+    assert_output(/^\s+#{AsciidoctorDitaMap::NAME} -h\|-V$/) do
+      error = assert_raises SystemExit do
+        AsciidoctorDitaMap::Cli.new ['--help']
+      end
+
+      assert_equal 0, error.status
+    end
+  end
+
   def test_version_short
     assert_output(/^#{AsciidoctorDitaMap::NAME} #{AsciidoctorDitaMap::VERSION}$/) do
       error = assert_raises SystemExit do
