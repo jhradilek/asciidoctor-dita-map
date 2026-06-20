@@ -47,12 +47,18 @@ module AsciidoctorDitaMap
       @prep = ''
     end
 
-    def compose_mapref_attributes element, file_info, type
+    def compose_mapref_attributes element, file_info
       target_file         = file_info[:target].sub(/\.adoc$/, '.ditamap')
 
       element.add_attribute 'href', target_file
+
+      if file_info[:navtitle]
+        element.add_attribute REXML::Attribute.new('navtitle', file_info[:navtitle]) if @opts[:navtitle]
+      end
+
+      element.add_attribute 'locktitle', 'yes' if @opts[:locktitle] and element['navtitle']
       element.add_attribute 'format', 'ditamap'
-      element.add_attribute 'type', type if @opts[:type]
+      element.add_attribute 'type', 'map' if @opts[:type]
       element.add_attribute 'chunk', file_info[:chunk] if @opts[:chunk] and file_info[:chunk]
       element.add_attribute 'toc', file_info[:toc] if @opts[:toc] and file_info[:toc]
     end
@@ -143,7 +149,7 @@ module AsciidoctorDitaMap
 
         if topic.type == 'map' or topic.type == 'assembly'
           xml_element = xml_parent.add_element('mapref')
-          compose_mapref_attributes xml_element, file_info, 'map'
+          compose_mapref_attributes xml_element, file_info
         else
           xml_element = xml_parent.add_element('topicref')
           compose_topicref_attributes xml_element, file_info, topic.title, topic.type
