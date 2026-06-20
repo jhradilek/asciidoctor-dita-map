@@ -109,7 +109,7 @@ class CliTest < Minitest::Test
   def test_run_mapref
     conv = AsciidoctorDitaMap::Convert.new
     incl = [
-      { :target => 'file.adoc', :offset => 1 }
+      { :target => 'file.adoc', :navtitle => 'A custom title', :offset => 1 }
     ]
     mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
     mock_topic = OpenStruct.new(:title => 'A map title', :type => 'map')
@@ -122,6 +122,8 @@ class CliTest < Minitest::Test
           assert_xpath_count xml, 1, '//mapref'
           assert_xpath_count xml, 0, '//topicref'
           assert_xpath_equal xml, 'file.ditamap', '/map/mapref/@href'
+          assert_xpath_equal xml, 'A custom title', '/map/mapref/@navtitle'
+          assert_xpath_equal xml, 'yes', '/map/mapref/@locktitle'
           assert_xpath_equal xml, 'ditamap', '/map/mapref/@format'
           assert_xpath_equal xml, 'map', '/map/mapref/@type'
         end
