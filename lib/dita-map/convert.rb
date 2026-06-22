@@ -145,6 +145,10 @@ module AsciidoctorDitaMap
 
         xml_parent = stack.last[:element]
 
+        if xml_parent.name == 'mapref'
+          warn "#{NAME}: warning: invalid mapref child element: #{target}"
+        end
+
         topic.type.sub!(/^assembly$/, 'concept') if not @opts[:assembly]
 
         if topic.type == 'map' or topic.type == 'assembly'

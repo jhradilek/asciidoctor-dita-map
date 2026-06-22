@@ -253,6 +253,29 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_run_parent_mapref
+    conv = AsciidoctorDitaMap::Convert.new
+    incl = [
+      { :target => 'file-1.adoc', :offset => 1 },
+      { :target => 'file-2.adoc', :offset => 2 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => nil, :type => 'map')
+
+    File.stub :read, 'topic contents' do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
+          assert_output(nil, /invalid mapref child element/) do
+            xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+            assert_xpath_equal xml, 'file-1.ditamap', '/map/mapref/@href'
+            assert_xpath_equal xml, 'file-2.ditamap', '/map/mapref/mapref/@href'
+          end
+        end
+      end
+    end
+  end
+
   def test_run_chunking
     conv = AsciidoctorDitaMap::Convert.new
     incl = [
