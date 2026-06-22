@@ -63,16 +63,16 @@ module AsciidoctorDitaMap
 
         opt.separator ''
 
+        opt.on('-A', '--no-assembly', 'do not treat assemblies as maps') do
+          @converter.opts[:assembly] = false
+        end
+
         opt.on('-I', '--no-id', 'do not generate the map id attribute') do
           @converter.opts[:id] = false
         end
 
         opt.on('-M', '--no-maptitle', 'do not generate the map title') do
           @converter.opts[:title] = false
-        end
-
-        opt.on('-A', '--no-assembly', 'do treat assemblies as maps') do
-          @converter.opts[:assembly] = false
         end
 
         opt.on('-C', '--no-chunk', 'do not generate the chunk attribute') do
