@@ -1,0 +1,80 @@
+#!/usr/bin/env ruby
+
+# Copyright (C) 2026 Jaromir Hradilek
+
+# MIT License
+#
+# Permission  is hereby granted,  free of charge,  to any person  obtaining
+# a copy of  this software  and associated documentation files  (the "Soft-
+# ware"),  to deal in the Software  without restriction,  including without
+# limitation the rights to use,  copy, modify, merge,  publish, distribute,
+# sublicense, and/or sell copies of the Software,  and to permit persons to
+# whom the Software is furnished to do so,  subject to the following condi-
+# tions:
+#
+# The above copyright notice  and this permission notice  shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS",  WITHOUT WARRANTY OF ANY KIND,  EXPRESS
+# OR IMPLIED,  INCLUDING BUT NOT LIMITED TO  THE WARRANTIES OF MERCHANTABI-
+# LITY,  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT
+# SHALL THE AUTHORS OR COPYRIGHT HOLDERS  BE LIABLE FOR ANY CLAIM,  DAMAGES
+# OR OTHER LIABILITY,  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM,  OUT OF OR IN CONNECTION WITH  THE SOFTWARE  OR  THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
+require 'optparse'
+require (topic = File.absolute_path '../lib/dita-map/topic.rb', __dir__) ? topic : 'dita-map/topic'
+
+class Cli
+  NAME    = 'dita-type'
+  VERSION = '0.9.0'
+
+  def initialize argv
+    @file = self.parse_args argv
+  end
+
+  def parse_args argv
+    parser = OptionParser.new do |opt|
+      opt.banner  = "Usage: #{NAME} FILE\n"
+      opt.banner += "       #{NAME} -h|-V\n\n"
+
+      opt.on('-h', '--help', 'display this help and exit') do
+        puts opt
+        exit
+      end
+
+      opt.on('-V', '--version', 'display version information and exit') do
+        puts "#{NAME} #{VERSION}"
+        exit
+      end
+    end
+
+    args = parser.parse argv
+
+    raise OptionParser::InvalidArgument, "invalid number of arguments" if args.length != 1
+
+    file = args[0]
+
+    raise OptionParser::InvalidArgument, "not a file: #{file}" unless File.exist? file and File.file? file
+    raise OptionParser::InvalidArgument, "file not readable: #{file}" unless File.readable? file
+
+    return file
+  end
+
+  def run
+    topic = AsciidoctorDitaMap::Topic.new File.read(@file)
+    puts topic.type ? topic.type : 'undef'
+  end
+end
+
+begin
+  cli = Cli.new ARGV
+  cli.run
+rescue OptionParser::InvalidArgument, OptionParser::InvalidOption,
+       OptionParser::AmbiguousOption, OptionParser::MissingArgument => error
+  abort "#{Cli::NAME}: #{error.message}"
+rescue Interrupt
+  exit 130
+end
+
