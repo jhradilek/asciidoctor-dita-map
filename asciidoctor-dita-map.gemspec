@@ -9,7 +9,10 @@ Gem::Specification.new do |s|
   s.authors     = ['Jaromir Hradilek']
   s.email       = 'jhradilek@gmail.com'
   s.bindir      = 'bin'
-  s.executables = ['dita-map']
+  s.executables = [
+    'dita-map',
+    'dita-type'
+  ]
   s.files       = [
     'lib/dita-map/catalog.rb',
     'lib/dita-map/cli.rb',
