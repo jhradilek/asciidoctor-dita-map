@@ -36,7 +36,7 @@ class Cli
 
   def parse_args argv
     parser = OptionParser.new do |opt|
-      opt.banner  = "Usage: #{NAME} FILE\n"
+      opt.banner  = "Usage: #{NAME} [FILE]\n"
       opt.banner += "       #{NAME} -h|-V\n\n"
 
       opt.on('-h', '--help', 'display this help and exit') do
@@ -52,7 +52,11 @@ class Cli
 
     args = parser.parse argv
 
-    raise OptionParser::InvalidArgument, "invalid number of arguments" if args.length != 1
+    raise OptionParser::InvalidArgument, "invalid number of arguments" if args.length > 1
+
+    if args.length == 0 or args[0].strip == '-'
+      return $stdin
+    end
 
     file = args[0]
 
@@ -63,7 +67,11 @@ class Cli
   end
 
   def run
-    topic = AsciidoctorDitaMap::Topic.new File.read(@file)
+    if @file == $stdin
+      topic = AsciidoctorDitaMap::Topic.new $stdin.read
+    else
+      topic = AsciidoctorDitaMap::Topic.new File.read(@file)
+    end
     puts topic.type ? topic.type : 'undef'
   end
 end
