@@ -72,7 +72,13 @@ class Cli
     else
       topic = AsciidoctorDitaMap::Topic.new File.read(@file)
     end
-    puts topic.type ? topic.type : 'undef'
+
+    if not topic.type
+      puts 'undef'
+      abort
+    end
+
+    puts topic.type
   end
 end
 
@@ -85,4 +91,3 @@ rescue OptionParser::InvalidArgument, OptionParser::InvalidOption,
 rescue Interrupt
   exit 130
 end
-
