@@ -147,4 +147,14 @@ class TopicTest < Minitest::Test
 
     assert_equal 'snippet', topic.type
   end
+
+  def test_topic_ignore
+    adoc  = <<~EOF.chomp
+    :_mod-docs-content-type: IGNORE
+    EOF
+
+    topic = AsciidoctorDitaMap::Topic.new adoc
+
+    assert_equal 'ignore', topic.type
+  end
 end
