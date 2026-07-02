@@ -121,7 +121,7 @@ module AsciidoctorDitaMap
 
         begin
           topic = Topic.new @prep + File.read(full_path), @attr
-          next if ['attributes', 'snippet'].include? topic.type
+          next if ['attributes', 'snippet', 'ignore'].include? topic.type
         rescue
           warn "#{NAME}: warning: unable to read included file: #{target}"
           topic = Topic.new ''

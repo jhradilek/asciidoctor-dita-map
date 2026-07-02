@@ -174,6 +174,46 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_run_snippet
+    conv = AsciidoctorDitaMap::Convert.new
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => nil, :type => 'snippet')
+
+    File.stub :read, 'topic contents' do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
+          xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 0, '//mapref'
+          assert_xpath_count xml, 0, '//topicref'
+        end
+      end
+    end
+  end
+
+  def test_run_ignore
+    conv = AsciidoctorDitaMap::Convert.new
+    incl = [
+      { :target => 'file.adoc', :offset => 1 }
+    ]
+    mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
+    mock_topic = OpenStruct.new(:title => nil, :type => 'ignore')
+
+    File.stub :read, 'topic contents' do
+      AsciidoctorDitaMap::Map.stub :new, mock_map do
+        AsciidoctorDitaMap::Topic.stub :new, mock_topic do
+          xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+          assert_xpath_count xml, 0, '//mapref'
+          assert_xpath_count xml, 0, '//topicref'
+        end
+      end
+    end
+  end
+
   def test_run_nesting
     conv = AsciidoctorDitaMap::Convert.new
     incl = [

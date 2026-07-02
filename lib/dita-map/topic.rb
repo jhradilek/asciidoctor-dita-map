@@ -50,7 +50,7 @@ module AsciidoctorDitaMap
         type.sub!(/^procedure$/, 'task')
       end
 
-      unless ['assembly', 'concept', 'reference', 'task', 'map', 'attributes', 'snippet'].include? type
+      unless ['assembly', 'concept', 'reference', 'task', 'map', 'attributes', 'snippet', 'ignore'].include? type
         return nil
       end
 
