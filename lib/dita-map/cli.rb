@@ -29,9 +29,10 @@ require_relative 'version'
 module AsciidoctorDitaMap
   class Cli
     def initialize argv
-      @output    = nil
-      @converter = Convert.new
-      @args      = self.parse_args argv
+      @output       = nil
+      @conditionals = false
+      @converter    = Convert.new
+      @args         = self.parse_args argv
     end
 
     def parse_args argv
@@ -59,6 +60,10 @@ module AsciidoctorDitaMap
 
         opt.on('-i', '--include-self', 'make the supplied file the toplevel topicref') do
           @converter.opts[:self] = true
+        end
+
+        opt.on('-c', '--conditionals', 'do not ignore conditional directives when processing the file') do
+          @conditionals = true
         end
 
         opt.separator ''
@@ -143,6 +148,8 @@ module AsciidoctorDitaMap
           input    = File.read(file)
           output   = @output ? @output : Pathname.new(file).sub_ext('.ditamap').to_s
         end
+
+        input.gsub!(/^(?:ifn?def|ifeval|endif)::\S*\[(.*)\]\s*$/, '\1') if not @conditionals
 
         if @converter.opts[:self] and file != $stdin
           result = @converter.run input, base_dir, file

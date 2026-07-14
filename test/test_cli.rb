@@ -217,6 +217,27 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_conditionals_short
+    cli  = AsciidoctorDitaMap::Cli.new ['-c']
+    con  = cli.instance_variable_get :@conditionals
+
+    assert_equal true, con
+  end
+
+  def test_conditionals_long
+    cli  = AsciidoctorDitaMap::Cli.new ['--conditionals']
+    con  = cli.instance_variable_get :@conditionals
+
+    assert_equal true, con
+  end
+
+  def test_conditionals_none
+    cli  = AsciidoctorDitaMap::Cli.new []
+    con  = cli.instance_variable_get :@conditionals
+
+    assert_equal false, con
+  end
+
   def test_no_id_short
     cli  = AsciidoctorDitaMap::Cli.new ['-I']
     conv = cli.instance_variable_get :@converter
