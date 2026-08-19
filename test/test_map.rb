@@ -5,6 +5,8 @@ require_relative '../lib/dita-map/map'
 class MapTest < Minitest::Test
   def test_map_structure
     adoc = <<~EOF.chomp
+    :chunk-to-content:
+
     [id="map-id"]
     = A map title
 
@@ -16,6 +18,7 @@ class MapTest < Minitest::Test
 
     assert_equal 'map-id', map.id
     assert_equal 'A map title', map.title
+    assert_equal true, map.chunk
     assert_equal map.includes[0][:target], 'file-1.adoc'
     assert_equal map.includes[0][:offset], 1
     assert_equal map.includes[1][:target], 'file-2.adoc'
@@ -64,5 +67,14 @@ class MapTest < Minitest::Test
     map = AsciidoctorDitaMap::Map.new adoc, Pathname.new(Dir.pwd).expand_path
 
     assert_nil map.title
+  end
+
+  def test_map_no_chunk
+    adoc = <<~EOF.chomp
+    = A map title
+    EOF
+
+    map = AsciidoctorDitaMap::Map.new adoc, Pathname.new(Dir.pwd).expand_path
+    assert_equal false, map.chunk
   end
 end

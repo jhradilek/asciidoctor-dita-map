@@ -399,4 +399,33 @@ class CliTest < Minitest::Test
       end
     end
   end
+
+  def test_run_include_self_chunk
+    conv     = AsciidoctorDitaMap::Convert.new
+    mock_map = OpenStruct.new(:title => 'An assembly title', :type => 'assembly', :id => 'assembly-id', :chunk => true, :includes => [])
+
+    conv.instance_variable_set :@opts, { :self => true, :chunk => true }
+
+    AsciidoctorDitaMap::Map.stub :new, mock_map do
+      xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path, 'test.adoc'
+
+      assert_xpath_equal xml, 'test.dita', '/map/topicref/@href'
+      assert_xpath_equal xml, 'to-content', '/map/topicref/@chunk'
+    end
+  end
+
+  def test_run_include_self_no_chunk
+    conv     = AsciidoctorDitaMap::Convert.new
+    mock_map = OpenStruct.new(:title => 'An assembly title', :type => 'assembly', :id => 'assembly-id', :chunk => false, :includes => [])
+
+    conv.instance_variable_set :@opts, { :self => true, :chunk => true }
+
+    AsciidoctorDitaMap::Map.stub :new, mock_map do
+      xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path, 'test.adoc'
+
+      assert_xpath_equal xml, 'test.dita', '/map/topicref/@href'
+      assert_xpath_count xml, 0, '/map/topicref/@chunk'
+    end
+  end
+
 end

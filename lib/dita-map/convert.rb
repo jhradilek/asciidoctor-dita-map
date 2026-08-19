@@ -97,16 +97,18 @@ module AsciidoctorDitaMap
       end
 
       if map.title and @opts[:title]
-        xml_title      = xml_root.add_element('title')
+        xml_title = xml_root.add_element('title')
         xml_title.add REXML::Text.new(map.title, false, nil, true)
       end
 
       if @opts[:self] and file
-        xml_self   = xml_root.add_element('topicref')
-        compose_topicref_attributes(xml_self, { :target => file }, map.title, map.type)
-        stack      = [{ :offset => 0, :element => xml_self }]
+        file_info = map.chunk ? { :target => file, :chunk => 'to-content' } : { :target => file }
+        xml_self  = xml_root.add_element('topicref')
+        compose_topicref_attributes(xml_self, file_info, map.title, map.type)
+
+        stack     = [{ :offset => 0, :element => xml_self }]
       else
-        stack      = [{ :offset => 0, :element => xml_root }]
+        stack     = [{ :offset => 0, :element => xml_root }]
       end
 
       map.includes.each do |file_info|
