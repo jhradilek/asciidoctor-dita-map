@@ -6,6 +6,7 @@ class MapTest < Minitest::Test
   def test_map_structure
     adoc = <<~EOF.chomp
     :chunk-to-content:
+    :navtitle: A custom title
 
     [id="map-id"]
     = A map title
@@ -18,6 +19,7 @@ class MapTest < Minitest::Test
 
     assert_equal 'map-id', map.id
     assert_equal 'A map title', map.title
+    assert_equal 'A custom title', map.navtitle
     assert_equal true, map.chunk
     assert_equal map.includes[0][:target], 'file-1.adoc'
     assert_equal map.includes[0][:offset], 1
@@ -76,5 +78,14 @@ class MapTest < Minitest::Test
 
     map = AsciidoctorDitaMap::Map.new adoc, Pathname.new(Dir.pwd).expand_path
     assert_equal false, map.chunk
+  end
+
+  def test_map_no_navtitle
+    adoc = <<~EOF.chomp
+    = A map title
+    EOF
+
+    map = AsciidoctorDitaMap::Map.new adoc, Pathname.new(Dir.pwd).expand_path
+    assert_nil map.navtitle
   end
 end

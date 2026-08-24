@@ -102,13 +102,16 @@ module AsciidoctorDitaMap
       end
 
       if @opts[:self] and file
-        file_info = map.chunk ? { :target => file, :chunk => 'to-content' } : { :target => file }
         xml_self  = xml_root.add_element('topicref')
+        file_info = { :target => file }
+        file_info[:chunk]    = 'to-content' if map.chunk
+        file_info[:navtitle] = map.navtitle
+
         compose_topicref_attributes(xml_self, file_info, map.title, map.type)
 
-        stack     = [{ :offset => 0, :element => xml_self }]
+        stack = [{ :offset => 0, :element => xml_self }]
       else
-        stack     = [{ :offset => 0, :element => xml_root }]
+        stack = [{ :offset => 0, :element => xml_root }]
       end
 
       map.includes.each do |file_info|
