@@ -27,12 +27,13 @@ require_relative 'topic'
 
 module AsciidoctorDitaMap
   class Map < Topic
-    attr_accessor :chunk, :id, :includes
+    attr_accessor :chunk, :id, :includes, :navtitle
 
     def initialize input, base_dir, attributes = []
       if input.empty?
         @id       = nil
         @title    = nil
+        @navtitle = nil
         @type     = nil
         @includes = []
         @chunk    = false
@@ -46,6 +47,7 @@ module AsciidoctorDitaMap
         @includes = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
         @id       = doc.id ? doc.id.gsub(/["']/, '') : nil
         @title    = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
+        @navtitle = (doc.attributes.key? 'navtitle') ? doc.attributes['navtitle'] : nil
         @type     = get_content_type doc.attributes
         @chunk    = doc.attributes.key? 'chunk-to-content'
       end

@@ -428,4 +428,31 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_run_include_self_navtitle
+    conv     = AsciidoctorDitaMap::Convert.new
+    mock_map = OpenStruct.new(:title => 'An assembly title', :navtitle => 'A custom title', :type => 'assembly', :id => 'assembly-id', :includes => [])
+
+    conv.instance_variable_set :@opts, { :self => true, :navtitle => true }
+
+    AsciidoctorDitaMap::Map.stub :new, mock_map do
+      xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path, 'test.adoc'
+
+      assert_xpath_equal xml, 'test.dita', '/map/topicref/@href'
+      assert_xpath_equal xml, 'A custom title', '/map/topicref/@navtitle'
+    end
+  end
+
+  def test_run_include_self_no_navtitle
+    conv     = AsciidoctorDitaMap::Convert.new
+    mock_map = OpenStruct.new(:title => 'An assembly title', :type => 'assembly', :id => 'assembly-id', :includes => [])
+
+    conv.instance_variable_set :@opts, { :self => true, :navtitle => true }
+
+    AsciidoctorDitaMap::Map.stub :new, mock_map do
+      xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path, 'test.adoc'
+
+      assert_xpath_equal xml, 'test.dita', '/map/topicref/@href'
+      assert_xpath_equal xml, 'An assembly title', '/map/topicref/@navtitle'
+    end
+  end
 end
