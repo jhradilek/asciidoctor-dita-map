@@ -73,11 +73,6 @@ class Cli
       topic = AsciidoctorDitaMap::Topic.new File.read(@file)
     end
 
-    if not topic.type
-      puts 'undef'
-      abort
-    end
-
     puts topic.type
   end
 end

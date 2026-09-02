@@ -35,7 +35,7 @@ class TopicTest < Minitest::Test
     topic = AsciidoctorDitaMap::Topic.new adoc
 
     assert_nil topic.title
-    assert_nil topic.type
+    assert_equal 'undef', topic.type
   end
 
   def test_topic_no_title
@@ -55,7 +55,7 @@ class TopicTest < Minitest::Test
 
     topic = AsciidoctorDitaMap::Topic.new adoc
 
-    assert_nil topic.type
+    assert_equal 'undef', topic.type
   end
 
   def test_topic_invalid_type
@@ -65,7 +65,7 @@ class TopicTest < Minitest::Test
 
     topic = AsciidoctorDitaMap::Topic.new adoc
 
-    assert_nil topic.type
+    assert_equal 'invalid', topic.type
   end
 
   def test_topic_content_type

@@ -30,7 +30,7 @@ module AsciidoctorDitaMap
     def initialize input, attributes = []
       if input.empty?
         @title = nil
-        @type  = nil
+        @type  = 'undef'
       else
         doc = Asciidoctor.load input, safe: :secure, logger: false, attributes: attributes
 
@@ -46,12 +46,14 @@ module AsciidoctorDitaMap
       type = attributes['_content-type'] ? attributes['_content-type'].downcase : nil unless type
       type = attributes['_module-type'] ? attributes['_module-type'].downcase : nil unless type
 
-      if type
-        type.sub!(/^procedure$/, 'task')
+      if not type
+        return 'undef'
       end
 
+      type.sub!(/^procedure$/, 'task')
+
       unless ['assembly', 'concept', 'reference', 'task', 'map', 'attributes', 'snippet', 'ignore'].include? type
-        return nil
+        return 'invalid'
       end
 
       return type
