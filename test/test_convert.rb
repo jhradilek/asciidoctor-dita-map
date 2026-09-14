@@ -22,6 +22,7 @@ class CliTest < Minitest::Test
     assert_equal true, opts[:navtitle]
     assert_equal true, opts[:title]
     assert_equal true, opts[:toc]
+    assert_equal true, opts[:topichead]
     assert_equal true, opts[:type]
     assert_equal [], attr
     assert_equal '', prep
@@ -397,6 +398,17 @@ class CliTest < Minitest::Test
           assert_xpath_equal xml, 'A&#160;topic title', '/map/topicref/@navtitle'
         end
       end
+    end
+  end
+
+  def test_run_topichead
+    conv = AsciidoctorDitaMap::Convert.new
+    mock = OpenStruct.new(:topichead => 'A topichead title', :type => nil, :id => nil, :includes => [])
+
+    AsciidoctorDitaMap::Map.stub :new, mock do
+      xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_equal xml, 'A topichead title', '/map/topichead/@navtitle'
     end
   end
 

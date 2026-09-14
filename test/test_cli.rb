@@ -463,6 +463,32 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_no_topichead_short
+    cli  = AsciidoctorDitaMap::Cli.new ['-H']
+    conv = cli.instance_variable_get :@converter
+
+    assert_equal false, conv.opts[:topichead]
+  end
+
+  def test_no_topichead_long
+    cli  = AsciidoctorDitaMap::Cli.new ['--no-topichead']
+    conv = cli.instance_variable_get :@converter
+
+    assert_equal false, conv.opts[:topichead]
+  end
+
+  def test_no_topichead_output
+    cli  = AsciidoctorDitaMap::Cli.new ['--no-topichead']
+    conv = cli.instance_variable_get :@converter
+    mock = OpenStruct.new(:title => nil, :type => nil, :id => nil, :topichead => 'A topichead title', :includes => [])
+
+    AsciidoctorDitaMap::Map.stub :new, mock do
+      xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
+
+      assert_xpath_count xml, 0, '//topichead'
+    end
+  end
+
   def test_no_type_short
     cli  = AsciidoctorDitaMap::Cli.new ['-T']
     conv = cli.instance_variable_get :@converter

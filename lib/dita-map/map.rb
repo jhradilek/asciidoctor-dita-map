@@ -27,16 +27,17 @@ require_relative 'topic'
 
 module AsciidoctorDitaMap
   class Map < Topic
-    attr_accessor :chunk, :id, :includes, :navtitle
+    attr_accessor :chunk, :id, :includes, :navtitle, :topichead
 
     def initialize input, base_dir, attributes = []
       if input.empty?
-        @id       = nil
-        @title    = nil
-        @navtitle = nil
-        @type     = nil
-        @includes = []
-        @chunk    = false
+        @id        = nil
+        @title     = nil
+        @navtitle  = nil
+        @type      = nil
+        @topichead = nil
+        @includes  = []
+        @chunk     = false
       else
         Asciidoctor::Extensions.register do
           include_processor CatalogIncludeDirectives
@@ -44,12 +45,13 @@ module AsciidoctorDitaMap
 
         doc = Asciidoctor.load input, safe: :safe, logger: false, catalog_assets: true, attributes: attributes, base_dir: base_dir
 
-        @includes = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
-        @id       = doc.id ? doc.id.gsub(/["']/, '') : nil
-        @title    = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
-        @navtitle = (doc.attributes.key? 'navtitle') ? doc.attributes['navtitle'] : nil
-        @type     = get_content_type doc.attributes
-        @chunk    = doc.attributes.key? 'chunk-to-content'
+        @includes  = doc.catalog[:include_files] ? doc.catalog[:include_files] : []
+        @id        = doc.id ? doc.id.gsub(/["']/, '') : nil
+        @title     = doc.title ? doc.title.gsub(/<[^>]*>/, '') : nil
+        @navtitle  = (doc.attributes.key? 'navtitle') ? doc.attributes['navtitle'] : nil
+        @type      = get_content_type doc.attributes
+        @topichead = (doc.attributes.key? 'topichead') ? doc.attributes['topichead'] : nil
+        @chunk     = doc.attributes.key? 'chunk-to-content'
       end
     end
   end
