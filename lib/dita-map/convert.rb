@@ -39,6 +39,7 @@ module AsciidoctorDitaMap
         :navtitle => true,
         :title => true,
         :toc => true,
+        :topichead => true,
         :type => true,
         :self => false,
         :verbose => false,
@@ -99,6 +100,10 @@ module AsciidoctorDitaMap
       if map.title and @opts[:title]
         xml_title = xml_root.add_element('title')
         xml_title.add REXML::Text.new(map.title, false, nil, true)
+      end
+
+      if map.topichead and @opts[:topichead]
+        xml_root = xml_root.add_element('topichead', { 'navtitle' => map.topichead })
       end
 
       if @opts[:self] and file

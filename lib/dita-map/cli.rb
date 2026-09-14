@@ -72,20 +72,24 @@ module AsciidoctorDitaMap
           @converter.opts[:assembly] = false
         end
 
-        opt.on('-I', '--no-id', 'do not generate the map id attribute') do
-          @converter.opts[:id] = false
-        end
-
-        opt.on('-M', '--no-maptitle', 'do not generate the map title') do
-          @converter.opts[:title] = false
-        end
-
         opt.on('-C', '--no-chunk', 'do not generate the chunk attribute') do
           @converter.opts[:chunk] = false
         end
 
+        opt.on('-H', '--no-topichead', 'do not generate the topichead element') do
+          @converter.opts[:topichead] = false
+        end
+
+        opt.on('-I', '--no-id', 'do not generate the map id attribute') do
+          @converter.opts[:id] = false
+        end
+
         opt.on('-L', '--no-locktitle', 'do not generate the locktitle attribute') do
           @converter.opts[:locktitle] = false
+        end
+
+        opt.on('-M', '--no-maptitle', 'do not generate the map title') do
+          @converter.opts[:title] = false
         end
 
         opt.on('-N', '--no-navtitle', 'do not generate the navtitle attribute') do
