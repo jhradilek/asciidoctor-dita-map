@@ -71,8 +71,6 @@ module AsciidoctorDitaMap
 
       if file_info[:navtitle]
         element.add_attribute REXML::Attribute.new('navtitle', file_info[:navtitle]) if @opts[:navtitle]
-      else
-        element.add_attribute REXML::Attribute.new('navtitle', title) if @opts[:navtitle] and title
       end
 
       element.add_attribute 'locktitle', 'yes' if @opts[:locktitle] and element['navtitle']
