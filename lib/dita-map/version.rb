@@ -25,5 +25,5 @@
 
 module AsciidoctorDitaMap
   NAME        = 'dita-map'
-  VERSION     = '0.9.15'
+  VERSION     = '0.9.16'
 end
