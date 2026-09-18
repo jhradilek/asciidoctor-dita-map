@@ -205,14 +205,14 @@ class CliTest < Minitest::Test
   def test_include_self_output
     cli  = AsciidoctorDitaMap::Cli.new ['--include-self']
     conv = cli.instance_variable_get :@converter
-    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept', :id => nil, :includes => [])
+    mock = OpenStruct.new(:title => 'A topic title', :type => 'concept', :id => nil, :navtitle => 'A custom title', :includes => [])
 
     AsciidoctorDitaMap::Map.stub :new, mock do
       xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path, 'file.adoc'
 
       assert_xpath_count xml, 1, '/map/topicref'
       assert_xpath_equal xml, 'file.dita', '/map/topicref/@href'
-      assert_xpath_equal xml, 'A topic title', '/map/topicref/@navtitle'
+      assert_xpath_equal xml, 'A custom title', '/map/topicref/@navtitle'
       assert_xpath_equal xml, 'concept', '/map/topicref/@type'
     end
   end
@@ -378,7 +378,7 @@ class CliTest < Minitest::Test
     cli  = AsciidoctorDitaMap::Cli.new ['--no-locktitle']
     conv = cli.instance_variable_get :@converter
     incl = [
-      { :target => 'file.adoc', :offset => 1 }
+      { :target => 'file.adoc', :offset => 1, :navtitle => 'A custom title' }
     ]
     mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
     mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')

@@ -5,7 +5,7 @@ require 'pathname'
 require_relative 'helper'
 require_relative '../lib/dita-map/convert'
 
-class CliTest < Minitest::Test
+class ConvertTest < Minitest::Test
   def test_defaults
     conv = AsciidoctorDitaMap::Convert.new
     attr = conv.instance_variable_get :@attr
@@ -86,7 +86,7 @@ class CliTest < Minitest::Test
   def test_run_topicref
     conv = AsciidoctorDitaMap::Convert.new
     incl = [
-      { :target => 'file.adoc', :offset => 1 }
+      { :target => 'file.adoc', :offset => 1, :navtitle => 'A custom title' }
     ]
     mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
     mock_topic = OpenStruct.new(:title => 'A topic title', :type => 'concept')
@@ -99,7 +99,7 @@ class CliTest < Minitest::Test
           assert_xpath_count xml, 1, '//topicref'
           assert_xpath_count xml, 0, '//mapref'
           assert_xpath_equal xml, 'file.dita', '/map/topicref/@href'
-          assert_xpath_equal xml, 'A topic title', '/map/topicref/@navtitle'
+          assert_xpath_equal xml, 'A custom title', '/map/topicref/@navtitle'
           assert_xpath_equal xml, 'yes', '/map/topicref/@locktitle'
           assert_xpath_equal xml, 'concept', '/map/topicref/@type'
         end
@@ -385,7 +385,7 @@ class CliTest < Minitest::Test
   def test_run_navtitle_entities
     conv = AsciidoctorDitaMap::Convert.new
     incl = [
-      { :target => 'file.adoc', :offset => 1 }
+      { :target => 'file.adoc', :offset => 1, :navtitle => 'A&#160;custom title' }
     ]
     mock_map   = OpenStruct.new(:title => nil, :type => nil, :id => nil, :includes => incl)
     mock_topic = OpenStruct.new(:title => 'A&#160;topic title', :type => 'concept')
@@ -395,7 +395,7 @@ class CliTest < Minitest::Test
         AsciidoctorDitaMap::Topic.stub :new, mock_topic do
           xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path
 
-          assert_xpath_equal xml, 'A&#160;topic title', '/map/topicref/@navtitle'
+          assert_xpath_equal xml, 'A&#160;custom title', '/map/topicref/@navtitle'
         end
       end
     end
@@ -464,7 +464,7 @@ class CliTest < Minitest::Test
       xml = conv.run 'map contents', Pathname.new(Dir.pwd).expand_path, 'test.adoc'
 
       assert_xpath_equal xml, 'test.dita', '/map/topicref/@href'
-      assert_xpath_equal xml, 'An assembly title', '/map/topicref/@navtitle'
+      assert_xpath_count xml, 0, '/map/topicref/@navtitle'
     end
   end
 end
