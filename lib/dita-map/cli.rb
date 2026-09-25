@@ -156,7 +156,7 @@ module AsciidoctorDitaMap
         input.gsub!(/^(?:ifn?def|ifeval|endif)::\S*\[(.*)\]\s*$/, '\1') if not @conditionals
 
         if @converter.opts[:self] and file != $stdin
-          result = @converter.run input, base_dir, file
+          result = @converter.run input, base_dir, Pathname.new(file).basename.to_s
         else
           result = @converter.run input, base_dir
         end
