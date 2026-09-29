@@ -23,6 +23,7 @@
 
 require 'optparse'
 require 'pathname'
+require 'asciidoctor'
 require_relative 'convert'
 require_relative 'version'
 
@@ -56,6 +57,7 @@ module AsciidoctorDitaMap
 
           @converter.prep << File.read(file)
           @converter.prep << "\n"
+          @converter.prep.gsub!(Asciidoctor::IncludeDirectiveRx, '')
         end
 
         opt.on('-i', '--include-self', 'make the supplied file the toplevel topicref') do

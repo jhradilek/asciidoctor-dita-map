@@ -127,6 +127,23 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_prepend_file_include
+    prep = "prepended text\ninclude::file.adoc[]"
+
+    File.stub :exist?, true do
+      File.stub :file?, true do
+        File.stub :readable?, true do
+          File.stub :read, prep do
+            cli  = AsciidoctorDitaMap::Cli.new ['--prepend-file', 'attributes.adoc']
+            conv = cli.instance_variable_get :@converter
+
+            assert_equal conv.prep, "prepended text\n\n"
+          end
+        end
+      end
+    end
+  end
+
   def test_prepend_file_multiple
     prep = 'prepended text'
 
