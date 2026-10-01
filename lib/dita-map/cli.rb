@@ -57,7 +57,9 @@ module AsciidoctorDitaMap
 
           @converter.prep << File.read(file)
           @converter.prep << "\n"
+
           @converter.prep.gsub!(Asciidoctor::IncludeDirectiveRx, '')
+          @converter.prep.gsub!(/^:_(mod-docs-content|content|module)-type: /, '')
         end
 
         opt.on('-i', '--include-self', 'make the supplied file the toplevel topicref') do
